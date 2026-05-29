@@ -1,12 +1,24 @@
 {
   "name": "social_app_code",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "cross-env NODE_ENV=development concurrently \"tsc --w\" \"node --watch .\"",
+    "prod": "cross-env NODE_ENV=production concurrently \"tsc --w\" \"node --watch .\"",
+    "build": "tsc --w"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.1"
+  },
+  "dependencies": {
+    "concurrently": "^10.0.0",
+    "cross-env": "^10.1.0",
+    "express": "^5.2.1"
+  }
 }
