@@ -1,2 +1,3 @@
-let x:string = "maik"
-console.log(x);
+import bootstrap from "./app.bootstrap";
+
+bootstrap()
