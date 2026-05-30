@@ -2,9 +2,14 @@ import express, { Application } from "express";
 import { envConfig } from "./Config";
 import { authRouter, commentRouter, postRouter, userRouter } from "./Modules";
 import { globalErrorHandler } from "./Middlewares";
+import dbConnetion from "./DB/db.connection";
 
-const bootstrap = () => {
+const bootstrap = async () => {
+  // create app instance from express
   const app: Application = express();
+
+  // Database Connection
+  await dbConnetion();
 
   //function to handle middlewares
   function initializeCommonMiddlewares(app: Application) {
@@ -30,8 +35,8 @@ const bootstrap = () => {
       return res.json({ message: "welcome to social App" });
     });
 
-    // Global Error Handler 
-    app.use(globalErrorHandler)
+    // Global Error Handler
+    app.use(globalErrorHandler);
   }
 
   initializeCommonMiddlewares(app);
