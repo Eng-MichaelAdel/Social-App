@@ -1,7 +1,7 @@
 import { envConfig } from "../Config";
 import mongoose from "mongoose";
 
-const dbConnetion = async () => {
+const dbConnetion = async (): Promise<void> => {
   try {
     const URI: string = envConfig.DB.URI;
     await mongoose.connect(URI);

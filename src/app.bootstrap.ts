@@ -4,7 +4,7 @@ import { authRouter, commentRouter, postRouter, userRouter } from "./Modules";
 import { globalErrorHandler } from "./Middlewares";
 import dbConnetion from "./DB/db.connection";
 
-const bootstrap = async () => {
+const bootstrap = async (): Promise<void> => {
   // create app instance from express
   const app: Application = express();
 
