@@ -1,6 +1,7 @@
 import express, { Application } from "express";
 import { envConfig } from "./Config";
 import { authRouter, commentRouter, postRouter, userRouter } from "./Modules";
+import { globalErrorHandler } from "./Middlewares";
 
 const bootstrap = () => {
   const app: Application = express();
@@ -28,6 +29,9 @@ const bootstrap = () => {
     app.get("/", (req, res, next) => {
       return res.json({ message: "welcome to social App" });
     });
+
+    // Global Error Handler 
+    app.use(globalErrorHandler)
   }
 
   initializeCommonMiddlewares(app);
