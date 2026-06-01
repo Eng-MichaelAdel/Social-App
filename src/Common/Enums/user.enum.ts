@@ -4,18 +4,18 @@
 // provider: { type: String, enum: Object.values(providerEnum), default: providerEnum.system },
 
 export enum GenderEnum {
-  Male = "Male",
-  Female = "Female",
+  Male = "male",
+  Female = "female",
 }
 export enum RoleEnum {
-  User = "User",
-  Admin = "Admin",
+  User = "user",
+  Admin = "admin",
 }
 export enum StatusEnum {
-  Active = "Active",
-  InActive = "InActive",
+  Active = "active",
+  InActive = "inActive",
 }
 export enum ProviderEnum {
-  System = "System",
-  Google = "Google",
+  System = "system",
+  Google = "google",
 }

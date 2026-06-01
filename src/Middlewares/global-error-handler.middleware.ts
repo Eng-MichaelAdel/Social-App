@@ -5,7 +5,7 @@ import { IHttpAppError } from "../Common";
 
 
 const globalErrorHandler = (error: IHttpAppError, req: Request, res: Response, next: NextFunction): Response => {
-  const status: number = error.status;
+  const status: number = error.status ?? 500;
   const message: string = error.message;
 
   const NODE_ENV = envConfig.app.NODE_ENV;
