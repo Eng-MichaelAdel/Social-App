@@ -1,13 +1,13 @@
 import { Router } from "express";
 import authService from "./auth.service";
 import { successResponse } from "../../Common";
-import { ILoginResponse } from "./auth.entity";
+// import { ILoginResponse } from "./auth.entity";
 
 const router = Router();
 
-router.post("/login", (req, res, next) => {
-  const data = authService.login(req.body);
-  return successResponse<ILoginResponse>({ res, data });
+router.post("/signup", async (req, res, next): Promise<any> => {
+  const data = await authService.signup(req.body);
+  return successResponse({ res, data });
 });
 
 export default router;
