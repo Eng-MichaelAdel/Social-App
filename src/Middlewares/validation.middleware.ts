@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { ZodType } from "zod";
+import { ZodTypeAny } from "zod";
 import { BadRequestException } from "../Common";
 
 type RequestKey = keyof Request;
-type schemaType = Partial<Record<RequestKey, ZodType>>;
+type schemaType = Partial<Record<RequestKey, ZodTypeAny>>;
 
 const validation = (schema: schemaType) => {
   // validation middleware Returns a middleware function that validates the request based on the provided schema
