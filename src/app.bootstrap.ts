@@ -19,6 +19,11 @@ const bootstrap = async (): Promise<void> => {
 
   //function to initialize application routing
   function initilaizeAppRouting(app: Application) {
+    // check router
+    app.get("/", (req, res, next) => {
+      return res.json({ message: "welcome to social App" });
+    });
+
     // project routers
     app.use("/auth", authRouter);
     app.use("/user", userRouter);
@@ -28,11 +33,6 @@ const bootstrap = async (): Promise<void> => {
     // not found router
     app.use("{/*dummy}", (req, res, next) => {
       return res.status(404).json({ message: "invalid application routing" });
-    });
-
-    // check router
-    app.get("/", (req, res, next) => {
-      return res.json({ message: "welcome to social App" });
     });
 
     // Global Error Handler

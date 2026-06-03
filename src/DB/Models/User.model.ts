@@ -29,9 +29,9 @@ const userSchema = new mongoose.Schema<IUser>(
     DOB: { type: String },
     oldPasswords: [String],
 
-    gender: { type: String, enum: GenderEnum, default: GenderEnum.Male },
+    gender: { type: String, enum: GenderEnum },
     role: { type: String, enum: RoleEnum, default: RoleEnum.User },
-    status: { type: String, enum: StatusEnum, default: StatusEnum.Active },
+    status: { type: String, enum: StatusEnum },
     provider: { type: String, enum: ProviderEnum, default: ProviderEnum.System },
 
     profielPictuer: { type: String },

@@ -8,7 +8,7 @@ export interface IUser {
   password: string;
   confirmedPassword?: String;
   phone?: String;
-  DOB?: Date;
+  DOB?: string;
   oldPasswords?: String[];
 
   gender: GenderEnum;
