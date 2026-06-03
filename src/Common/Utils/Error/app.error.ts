@@ -3,7 +3,7 @@ class HttpAppError extends Error {
     message: string = "Somthing Went Wrong",
     public status: number = 500,
     public type: string = "Internal Server Error",
-    public details: unknown = null,
+    public details?: any ,
     options?: ErrorOptions ,
   ) {
     super(message, options);
