@@ -7,18 +7,17 @@ const encryptionEnv = envConfig.ENCRYPTION;
 const hashEnv = envConfig.HASH;
 
 class DataSecurityService {
-
   //*  hashing and comparing password
   generateHash(plainText: string): Promise<string> {
     return hash(plainText, hashEnv.SALT_ROUND);
   }
-
+  
   async compareHash(password: string, hashedPassword: string): Promise<boolean> {
     let match = false;
-
     if (await compare(password, hashedPassword)) {
       match = true;
     }
+  
     return match;
   }
 
@@ -30,7 +29,7 @@ class DataSecurityService {
     // create a cipher using the AES-256-CBC algorithm, the encryption key and the IV
     const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(encryptionEnv.ENCRYPTION_KEY, "hex"), IV);
 
-    // encrypt the plain text 
+    // encrypt the plain text
     let encryption = cipher.update(plainText, "utf-8", "hex");
 
     // finalize the encryption

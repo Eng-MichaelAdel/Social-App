@@ -19,3 +19,9 @@ export enum ProviderEnum {
   System = "system",
   Google = "google",
 }
+
+export enum TokenTypeEnum {
+  access = "access",
+  refresh = "refresh",
+  both = "both",
+}

@@ -17,6 +17,21 @@ const envConfig = {
   HASH: {
     SALT_ROUND: parseInt(process.env.SALT_ROUND as string) ?? 12,
   },
+
+  JWT: {
+    user: {
+      accessSignature: process.env.USER_JWT_ACCESS_SECRET ?? "jwt_user_access_secret@social-app-06042026T11:50",
+      accessExp: parseInt(process.env.USER_JWT_ACCESS_EXP as string) ?? 3600,
+      refreshSignature: process.env.USER_JWT_REFRESH_SECRET ?? "jwt_user_refresh_secret@social-app-06042026T11:50",
+      refreshExp: parseInt(process.env.USER_JWT_REFRESH_EXP as string) ?? 604800,
+    },
+    admin: {
+      accessSignature: process.env.ADMIN_JWT_ACCESS_SECRET ?? "jwt_admin_access_secret@social-app-06042026T11:50",
+      accessExp: parseInt(process.env.ADMIN_JWT_ACCESS_EXP as string) ?? 3600,
+      refreshSignature: process.env.ADMIN_JWT_REFRESH_SECRET ?? "jwt_admin_refresh_secret@social-app-06042026T11:50",
+      refreshExp: parseInt(process.env.ADMIN_JWT_REFRESH_EXP as string) ?? 604800,
+    },
+  },
 };
 
 export default envConfig;
