@@ -6,18 +6,18 @@ export interface IUser {
   userName?:string
   email: string;
   password: string;
-  confirmedPassword?: String;
-  phone?: String;
+  confirmedPassword: string;
+  phone?: string;
   DOB?: string;
-  oldPasswords?: String[];
+  oldPasswords?: string[];
 
   gender: GenderEnum;
   role: RoleEnum;
   status?: StatusEnum;
   provider: ProviderEnum;
 
-  profielPictuer?: String;
-  coverProfilePicture?: String[];
+  profielPictuer?: string;
+  coverProfilePicture?: string[];
 
   googleSub?: string;
   isEmailVerified?: boolean;
