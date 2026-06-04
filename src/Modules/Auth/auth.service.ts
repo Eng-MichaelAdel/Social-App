@@ -6,6 +6,8 @@ import { UserRepository } from "../../DB/Repositories";
 import { TsighnUpBody } from "../../Validators";
 import DataSecurityService from "./../../Common/Services/DataSecurity.service";
 
+const JwtSecrets = envConfig.JWT;
+
 class AuthService {
   constructor(
     private userRepository = new UserRepository(),
@@ -23,21 +25,19 @@ class AuthService {
     }
     result.save();
 
-    const {accessToken,refreshToken} = this.tokenService.createLoginCredentials({
+    const { accessToken, refreshToken } = this.tokenService.createLoginCredentials({
       payload: { id: result.id, email: result.email, role: result.role },
       options: {
-        access: { expiresIn: envConfig.JWT[result.role].accessExp },
-        refresh: { expiresIn: envConfig.JWT[result.role].refreshExp },
+        access: { expiresIn: JwtSecrets[result.role].accessExp },
+        refresh: { expiresIn: JwtSecrets[result.role].refreshExp },
       },
     });
 
+    console.log({ accessToken, refreshToken });
 
-    console.log({accessToken,refreshToken});
-
-    const decodedData = await this.tokenService.decodeToken(accessToken as string)
+    const decodedData = await this.tokenService.decodeToken(accessToken as string);
     console.log(decodedData);
-    
-    
+
     return result;
   }
 }

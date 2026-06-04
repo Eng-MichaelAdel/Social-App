@@ -1,61 +1,25 @@
 import { envConfig } from "../../Config";
 import jwt from "jsonwebtoken";
-import type { JwtPayload, PrivateKey, PublicKey, Secret, SignOptions, VerifyOptions } from "jsonwebtoken";
-import { RoleEnum, TokenTypeEnum } from "../Enums";
+import type { JwtPayload } from "jsonwebtoken";
+import { RoleEnum, TokenTypeEnum } from "../Types/Enums";
 import { BadRequestException, NotFoundException } from "../Utils";
 import { UserRepository } from "../../DB/Repositories";
+import { ICreateLoginCredentials, IGenerateToken, IPayloadData, IReturnLoginCredentials, ISigniture, IVerifyToken } from "../Types";
 
-interface IGenerateToken {
-  payload: IPayloadData;
-  secret: Secret | PrivateKey;
-  options?: SignOptions;
-}
 
-interface IVerifyToken {
-  token: string;
-  secret: Secret | PublicKey;
-  options?: VerifyOptions & { complete?: false };
-}
-
-interface IPayloadData {
-  id: string;
-  email: string;
-  role: RoleEnum;
-  tokenType?: TokenTypeEnum;
-}
-
-interface ISigniture {
-  accessSignature: string;
-  refreshSignature: string;
-}
-
-interface ICreateLoginCredentials {
-  payload: IPayloadData;
-  options: {
-    access: SignOptions;
-    refresh: SignOptions;
-  };
-  requiredToken?: TokenTypeEnum;
-}
-
-interface IReturnLoginCredentials {
-  accessToken: string | undefined;
-  refreshToken: string | undefined;
-}
 
 const JwtSecrets = envConfig.JWT;
 
 class TokenService {
   constructor(private userRepository: UserRepository = new UserRepository()) {}
 
-
   createLoginCredentials({ payload, options, requiredToken }: ICreateLoginCredentials): IReturnLoginCredentials {
     let accessToken: string | undefined;
     let refreshToken: string | undefined;
 
-    const detectedSecret: string | ISigniture = this._detectSignitureByRoleAndTokenType(payload.role,requiredToken);
+    const detectedSecret: string | ISigniture = this._detectSignitureByRoleAndTokenType(payload.role, requiredToken);
     switch (requiredToken) {
-      case TokenTypeEnum.access:        
+      case TokenTypeEnum.access:
         accessToken = this._generateToken({
           payload: { ...payload, tokenType: TokenTypeEnum.access },
           secret: detectedSecret as string,
@@ -72,7 +36,7 @@ class TokenService {
         break;
 
       default:
-                console.log(detectedSecret);
+        console.log(detectedSecret);
 
         accessToken = this._generateToken({
           payload: { ...payload, tokenType: TokenTypeEnum.access },
@@ -86,7 +50,7 @@ class TokenService {
         });
         break;
     }
-    return { accessToken, refreshToken }
+    return { accessToken, refreshToken };
   }
 
   async decodeToken(token: string) {
@@ -98,10 +62,12 @@ class TokenService {
       throw new BadRequestException("invalid payload");
     }
 
-    // ! check if there is revoked token
-    // if (await get(RevokenKeyFormat(decodedData.id, decodedData.jti))) {
-    //   throw new BadRequestException("Invalid login sesssion ,login again");
-    // }
+    // --------------------------------------------------------------------------------------------------------------------
+    /*     ! check if there is revoked token
+    if (await get(RevokenKeyFormat(decodedData.id, decodedData.jti))) {
+      throw new BadRequestException("Invalid login sesssion ,login again");
+    } */
+    // --------------------------------------------------------------------------------------------------------------------
 
     //  detect Signiture due to Role
     const secret = this._detectSignitureByRoleAndTokenType(decodedData.role, decodedData.tokenType) as string;
@@ -111,29 +77,31 @@ class TokenService {
 
     //  get user account
     const userData = await this.userRepository.findById({ id });
-    
+
     //  check if user account is available
     if (!userData) {
       throw new NotFoundException("invalid user credentials ,please register");
     }
 
-    // ! check if user loggedout
-    // if (userData.logoutCredentialTime && userData.logoutCredentialTime.getTime() >= decodedData.iat * 1000) {
-    //   throw new NotFoundException("Invalid login sesssion");
-    // }
+    // --------------------------------------------------------------------------------------------------------------------
+    /*      ! check if user loggedout
+     if (userData.logoutCredentialTime && userData.logoutCredentialTime.getTime() >= decodedData.iat * 1000) {
+       throw new NotFoundException("Invalid login sesssion");
+     } */
+    // --------------------------------------------------------------------------------------------------------------------
 
     return { userData, decodedData };
   }
-  
-  _generateToken({ payload, secret, options }: IGenerateToken): string {
+
+  private _generateToken({ payload, secret, options }: IGenerateToken): string {
     return jwt.sign(payload, secret, options);
   }
 
-  _verifyToken({ token, secret, options }: IVerifyToken): JwtPayload | string {
+  private _verifyToken({ token, secret, options }: IVerifyToken): JwtPayload | string {
     return jwt.verify(token, secret, options);
   }
 
-  _detectSignitureByRole(role: RoleEnum = RoleEnum.User): ISigniture {
+  private _detectSignitureByRole(role: RoleEnum = RoleEnum.User): ISigniture {
     const signature: ISigniture = {
       accessSignature: JwtSecrets[role].accessSignature,
       refreshSignature: JwtSecrets[role].refreshSignature,
@@ -141,7 +109,7 @@ class TokenService {
     return signature;
   }
 
-  _detectSignitureByRoleAndTokenType(role: RoleEnum | undefined, tokenType = TokenTypeEnum.both): string | ISigniture {
+  private _detectSignitureByRoleAndTokenType(role: RoleEnum | undefined, tokenType = TokenTypeEnum.both): string | ISigniture {
     const signature: ISigniture = this._detectSignitureByRole(role);
     let secret: string | ISigniture;
     switch (tokenType) {

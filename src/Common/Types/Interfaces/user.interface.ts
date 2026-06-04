@@ -3,7 +3,7 @@ import { GenderEnum, ProviderEnum, RoleEnum, StatusEnum } from "../Enums";
 export interface IUser {
   firstName: string;
   lastName: string;
-  userName?:string
+  userName?: string;
   email: string;
   password: string;
   confirmedPassword: string;
