@@ -32,6 +32,12 @@ const envConfig = {
       refreshExp: parseInt(process.env.ADMIN_JWT_REFRESH_EXP as string) ?? 604800,
     },
   },
+
+  EMAIL: {
+    user: process.env.EMAIL_USER ?? "michael.civil13@gmail.com",
+    password: process.env.EMAIL_PASS ?? "weypgegrxbefrclp",
+    service: process.env.EMAIL_SERVICE ?? "Gmail",
+  },
 };
 
 export default envConfig;

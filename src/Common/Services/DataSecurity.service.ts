@@ -13,12 +13,7 @@ class DataSecurityService {
   }
   
   async compareHash(password: string, hashedPassword: string): Promise<boolean> {
-    let match = false;
-    if (await compare(password, hashedPassword)) {
-      match = true;
-    }
-  
-    return match;
+    return await compare(password, hashedPassword);
   }
 
   //* encryption and decryption

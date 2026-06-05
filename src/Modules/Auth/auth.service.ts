@@ -1,5 +1,6 @@
 import { IUser } from "../../Common";
 import { TokenService } from "../../Common/Services";
+import { emailEvent, otpTemplate } from "../../Common/Utils/Email";
 import { envConfig } from "../../Config";
 
 import { UserRepository } from "../../DB/Repositories";
@@ -38,6 +39,14 @@ class AuthService {
     const decodedData = await this.tokenService.decodeToken(accessToken as string);
     console.log(decodedData);
 
+    const otp: number = Math.floor(Math.random() * 900000 + 100000);
+
+    emailEvent.emit("sendEmail", {
+      to: "engmichael89@gmail.com",
+      cc: "michael_civilengineer@yahoo.com",
+      subject: "confirm Email",
+      html: otpTemplate({ otp, expInMin: 2, title: "confirm" }),
+    });
     return result;
   }
 }
