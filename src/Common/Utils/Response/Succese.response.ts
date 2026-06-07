@@ -1,4 +1,4 @@
-import { ISuccessResponse } from "../../Interfaces";
+import { ISuccessResponse } from "../../Types";
 
 const successResponse = <T>({ res, message = "Done", status = 200, data }: ISuccessResponse<T>) => {
   res.status(status).json({

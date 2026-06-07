@@ -3,6 +3,7 @@ import { envConfig } from "./Config";
 import { authRouter, commentRouter, postRouter, userRouter } from "./Modules";
 import { globalErrorHandler } from "./Middlewares";
 import dbConnetion from "./DB/db.connection";
+import { RedisService } from "./Common/Services";
 
 const bootstrap = async (): Promise<void> => {
   // create app instance from express
@@ -10,6 +11,9 @@ const bootstrap = async (): Promise<void> => {
 
   // Database Connection
   await dbConnetion();
+
+  // Redis Database Connection
+  await RedisService.connect();
 
   //function to handle middlewares
   function initializeCommonMiddlewares(app: Application) {

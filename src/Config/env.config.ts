@@ -38,6 +38,12 @@ const envConfig = {
     password: process.env.EMAIL_PASS ?? "weypgegrxbefrclp",
     service: process.env.EMAIL_SERVICE ?? "Gmail",
   },
+
+  REDIS: {
+    URL:
+      process.env.REDIS_URL ??
+      "rediss://default:gQAAAAAAAY_zAAIocDIxZjM5NjY2NDRlZDk0MmM5OWYwYmE2M2UzMmJiNzVmM3AyMTAyMzg3@new-lamprey-102387.upstash.io:6379",
+  },
 };
 
 export default envConfig;
