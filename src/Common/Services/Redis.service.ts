@@ -11,13 +11,9 @@ interface IRedisSet {
 }
 
 class RedisService {
-  private client: RedisClientType;
+ private static client: RedisClientType = createClient({ url: RedisUrl }) ;
 
-  constructor() {
-    this.client = createClient({ url: RedisUrl });
-  }
-
-  async connect() {
+  static async connect() {
     try {
       await this.client.connect();
       console.log("Redis Database is connected 💕");
@@ -28,7 +24,7 @@ class RedisService {
 
   set({ key, value, options }: IRedisSet): Promise<string | null> {
     try {
-      return this.client.set(key, value, options);
+      return RedisService.client.set(key, value, options);
     } catch (error) {
       throw new BadRequestException("fail in Redis SET Opreration", error);
     }
@@ -36,10 +32,10 @@ class RedisService {
 
   async update({ key, value, options }: IRedisSet): Promise<string | null> {
     try {
-      if (!(await this.client.get(key))) {
+      if (!(await RedisService.client.get(key))) {
         return null;
       }
-      return this.client.set(key, value, options);
+      return RedisService.client.set(key, value, options);
     } catch (error) {
       throw new BadRequestException("fail in Redis update Opreration", error);
     }
@@ -47,7 +43,7 @@ class RedisService {
 
   get(key: string): Promise<string | null> {
     try {
-      return this.client.get(key);
+      return RedisService.client.get(key);
     } catch (error) {
       throw new BadRequestException("fail in Redis GET Opreration", error);
     }
@@ -58,31 +54,31 @@ class RedisService {
       if (!keys.length) {
         throw new BadRequestException("Please enter a valid keys");
       }
-      return this.client.mGet(keys);
+      return RedisService.client.mGet(keys);
     } catch (error) {
       throw new BadRequestException("fail in Redis MGET Opreration", error);
     }
   }
 
-  ttl(key: string): Promise<Number> {
+  ttl(key: string): Promise<number> {
     try {
-      return this.client.ttl(key);
+      return RedisService.client.ttl(key);
     } catch (error) {
       throw new BadRequestException("fail in Redis TTL Opreration", error);
     }
   }
 
-  exists(key: string): Promise<Number> {
+  exists(key: string): Promise<number> {
     try {
-      return this.client.exists(key);
+      return RedisService.client.exists(key);
     } catch (error) {
       throw new BadRequestException("fail in Redis EXISTS Opreration", error);
     }
   }
 
-  expire({ key, ttl }: { key: string; ttl: number }): Promise<Number> {
+  expire({ key, ttl }: { key: string; ttl: number }): Promise<number> {
     try {
-      return this.client.expire(key, ttl);
+      return RedisService.client.expire(key, ttl);
     } catch (error) {
       throw new BadRequestException("fail in Redis EXPIRE Opreration", error);
     }
@@ -90,39 +86,39 @@ class RedisService {
 
   keys(prefix: string = ""): Promise<string[]> {
     try {
-      return this.client.keys(`${prefix}*`);
+      return RedisService.client.keys(`${prefix}*`);
     } catch (error) {
       throw new BadRequestException("fail in Redis KEYS Opreration", error);
     }
   }
 
-  del(keys: string | string[]): Promise<Number> {
+  del(keys: string | string[]): Promise<number> {
     try {
       if (Array.isArray(keys)) {
         if (!keys.length) throw new BadRequestException("Please enter a valid keys");
       }
 
-      return this.client.del(keys);
+      return RedisService.client.del(keys);
     } catch (error) {
       throw new BadRequestException("fail in Redis DEL Opreration", error);
     }
   }
 
-  persist(key: string): Promise<Number> {
+  persist(key: string): Promise<number> {
     try {
-      return this.client.persist(key);
+      return RedisService.client.persist(key);
     } catch (error) {
       throw new BadRequestException("fail in Redis PERSIST Opreration", error);
     }
   }
 
-  incr(key: string): Promise<Number> {
+  incr(key: string): Promise<number> {
     try {
-      return this.client.incr(key);
+      return RedisService.client.incr(key);
     } catch (error) {
       throw new BadRequestException("fail in Redis INCR Opreration", error);
     }
   }
 }
 
-export default new RedisService();
+export default RedisService;
