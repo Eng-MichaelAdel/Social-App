@@ -14,6 +14,7 @@ const signUpBodyBase = z.strictObject({
   DOB: generalValidators.user.shape.DOB,
 });
 
+
 export const signUpSchema = {
   body: signUpBodyBase.refine((data) => data.password === data.confirmedPassword, {
     path: ["confirmedPassword"],

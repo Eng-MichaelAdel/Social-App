@@ -32,6 +32,18 @@ const envConfig = {
       refreshExp: parseInt(process.env.ADMIN_JWT_REFRESH_EXP as string) ?? 604800,
     },
   },
+
+  EMAIL: {
+    user: process.env.EMAIL_USER ?? "michael.civil13@gmail.com",
+    password: process.env.EMAIL_PASS ?? "weypgegrxbefrclp",
+    service: process.env.EMAIL_SERVICE ?? "Gmail",
+  },
+
+  REDIS: {
+    URL:
+      process.env.REDIS_URL ??
+      "rediss://default:gQAAAAAAAY_zAAIocDIxZjM5NjY2NDRlZDk0MmM5OWYwYmE2M2UzMmJiNzVmM3AyMTAyMzg3@new-lamprey-102387.upstash.io:6379",
+  },
 };
 
 export default envConfig;

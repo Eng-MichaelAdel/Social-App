@@ -1,5 +1,6 @@
-import { IUser } from "../../Common";
-import { TokenService } from "../../Common/Services";
+import { IUser, OtpConextEnum, OtpStateEnum } from "../../Common";
+import { GenerateOtpKeyService, TokenService } from "../../Common/Services";
+import { emailEvent, otpTemplate } from "../../Common/Utils/Email";
 import { envConfig } from "../../Config";
 
 import { UserRepository } from "../../DB/Repositories";
@@ -13,23 +14,24 @@ class AuthService {
     private userRepository = new UserRepository(),
     private dataSecurityService = new DataSecurityService(),
     private tokenService = new TokenService(),
+    private generateOtpKeyService = new GenerateOtpKeyService(),
   ) {}
 
   async signup(data: TsighnUpBody): Promise<IUser> {
-    const result = await this.userRepository.create({ data });
-    result.password = await this.dataSecurityService.generateHash(result.password);
-    result.confirmedPassword = await this.dataSecurityService.generateHash(result.confirmedPassword);
+    const user = await this.userRepository.create({ data });
+    user.password = await this.dataSecurityService.generateHash(user.password);
+    user.confirmedPassword = await this.dataSecurityService.generateHash(user.confirmedPassword);
 
-    if (result.phone) {
-      result.phone = this.dataSecurityService.encrypt(result.phone);
+    if (user.phone) {
+      user.phone = this.dataSecurityService.encrypt(user.phone);
     }
-    result.save();
+    user.save();
 
     const { accessToken, refreshToken } = this.tokenService.createLoginCredentials({
-      payload: { id: result.id, email: result.email, role: result.role },
+      payload: { id: user.id, email: user.email, role: user.role },
       options: {
-        access: { expiresIn: JwtSecrets[result.role].accessExp },
-        refresh: { expiresIn: JwtSecrets[result.role].refreshExp },
+        access: { expiresIn: JwtSecrets[user.role].accessExp },
+        refresh: { expiresIn: JwtSecrets[user.role].refreshExp },
       },
     });
 
@@ -38,7 +40,23 @@ class AuthService {
     const decodedData = await this.tokenService.decodeToken(accessToken as string);
     console.log(decodedData);
 
-    return result;
+    const otp: number = this.generateOtpKeyService.generateOtpValue();
+
+    emailEvent.emit("sendEmail", {
+      to: "engmichael89@gmail.com",
+      cc: "michael_civilengineer@yahoo.com",
+      subject: "confirm Email",
+      html: otpTemplate({ otp, expInMin: 2, title: "confirm" }),
+    });
+
+    this.generateOtpKeyService.setAllOtpKeysToDatabase({
+      otpValue: otp,
+      otpUserData: user.email,
+      otpContext: OtpConextEnum.email,
+      OtpExpInMin: 2,
+      OtpState: OtpStateEnum.new,
+    });
+    return user;
   }
 }
 
