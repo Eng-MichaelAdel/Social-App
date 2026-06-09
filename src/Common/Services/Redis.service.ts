@@ -5,7 +5,7 @@ import { BadRequestException } from "../Utils";
 const RedisUrl = envConfig.REDIS.URL;
 
 interface IRedisSet {
-  key: string;
+  key: string ;
   value: number | RedisArgument;
   options?: SetOptions;
 }

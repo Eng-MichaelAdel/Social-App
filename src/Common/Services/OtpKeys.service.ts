@@ -13,7 +13,7 @@ import RedisService from "./Redis.service";
 import DataSecurityService from "./DataSecurity.service";
 import { BadRequestException, ConflictException, NotFoundException } from "../Utils";
 
-class GenerateKeyService {
+class GenerateOtpKeyService {
   constructor(
     private dataSecurityService = new DataSecurityService(),
     private redisServise = new RedisService(),
@@ -75,7 +75,7 @@ class GenerateKeyService {
     }
   }
 
-  private async setBlockKey({ otpUserData, otpContext, OtpExpInMin, OtpState }: ISetBlockKey) {
+  private async setBlockKey({ otpUserData, otpContext, OtpExpInMin, OtpState }: ISetBlockKey): Promise<void> {
     if (OtpState === OtpStateEnum.resend) {
       await this.redisServise.set({
         key: this.blockOtpKey({ otpUserData, otpContext }),
@@ -86,7 +86,7 @@ class GenerateKeyService {
     return;
   }
 
-  async CheckValidationOfAllOtp({ otpUserData, otpContext, OtpState }: ICheckOtpValidation) {
+  async CheckValidationOfAllOtp({ otpUserData, otpContext, OtpState }: ICheckOtpValidation): Promise<void> {
     if (OtpState === OtpStateEnum.resend) {
       // check if the user ruin the max trials and is blocked
       const [BlockKey, BlockTime] = await Promise.all([
@@ -109,7 +109,7 @@ class GenerateKeyService {
     }
   }
 
-  async setAllOtpKeysToDatabase({ otpValue, otpUserData, otpContext, OtpExpInMin, OtpState }: ISetAllOtpKeysToDatabase) {
+  async setAllOtpKeysToDatabase({ otpValue, otpUserData, otpContext, OtpExpInMin, OtpState }: ISetAllOtpKeysToDatabase): Promise<void> {
     await this.setOtpBaseKey({ otpValue, otpUserData, otpContext, OtpExpInMin });
     await this.handleSetOrIncrMaxTrialKey({ otpUserData, otpContext, OtpExpInMin, OtpState });
     await this.setBlockKey({ otpUserData, otpContext, OtpExpInMin, OtpState });
@@ -119,7 +119,7 @@ class GenerateKeyService {
     return Math.floor(Math.random() * 900000 + 100000);
   }
 
-  async verifyOtp({ otpValue, otpUserData, otpContext }: IVerifyOtp) {
+  async verifyOtp({ otpValue, otpUserData, otpContext }: IVerifyOtp): Promise<void> {
     // check existance of OTP for these user (not expired)
     const hashedOtp = await this.redisServise.get(this.baseOtpKey({ otpUserData, otpContext }));
     if (!hashedOtp) {
@@ -133,6 +133,8 @@ class GenerateKeyService {
 
     return;
   }
+
+
 }
 
-export default GenerateKeyService;
+export default GenerateOtpKeyService;

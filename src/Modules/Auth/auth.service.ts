@@ -1,6 +1,5 @@
 import { IUser, OtpConextEnum, OtpStateEnum } from "../../Common";
-import { TokenService } from "../../Common/Services";
-import GenerateKeyService from "../../Common/Services/GenerateKeys.service";
+import { GenerateOtpKeyService, TokenService } from "../../Common/Services";
 import { emailEvent, otpTemplate } from "../../Common/Utils/Email";
 import { envConfig } from "../../Config";
 
@@ -15,7 +14,7 @@ class AuthService {
     private userRepository = new UserRepository(),
     private dataSecurityService = new DataSecurityService(),
     private tokenService = new TokenService(),
-    private generateKeysService = new GenerateKeyService(),
+    private generateOtpKeyService = new GenerateOtpKeyService(),
   ) {}
 
   async signup(data: TsighnUpBody): Promise<IUser> {
@@ -41,7 +40,7 @@ class AuthService {
     const decodedData = await this.tokenService.decodeToken(accessToken as string);
     console.log(decodedData);
 
-    const otp: number = this.generateKeysService.generateOtpValue();
+    const otp: number = this.generateOtpKeyService.generateOtpValue();
 
     emailEvent.emit("sendEmail", {
       to: "engmichael89@gmail.com",
@@ -50,7 +49,7 @@ class AuthService {
       html: otpTemplate({ otp, expInMin: 2, title: "confirm" }),
     });
 
-    this.generateKeysService.setAllOtpKeysToDatabase({
+    this.generateOtpKeyService.setAllOtpKeysToDatabase({
       otpValue: otp,
       otpUserData: user.email,
       otpContext: OtpConextEnum.email,
