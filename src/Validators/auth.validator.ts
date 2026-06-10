@@ -1,7 +1,7 @@
 import * as z from "zod";
 import { generalValidators } from "./general.validator";
 
-const signUpBodyBase = z.strictObject({
+export const signUpBodyBase = z.strictObject({
   id: generalValidators.user.shape.id,
   firstName: generalValidators.user.shape.firstName,
   lastName: generalValidators.user.shape.lastName,
@@ -13,7 +13,6 @@ const signUpBodyBase = z.strictObject({
   role: generalValidators.user.shape.role,
   DOB: generalValidators.user.shape.DOB,
 });
-
 
 export const signUpSchema = {
   body: signUpBodyBase.refine((data) => data.password === data.confirmedPassword, {
@@ -31,4 +30,13 @@ export const signUpSchema = {
   }),
 };
 
-export type TsighnUpBody = z.infer<typeof signUpBodyBase>;
+export const resendConfirmEmail = {
+  body: z.object({
+    email: generalValidators.user.shape.email,
+  }),
+};
+export const confirmEmail = {
+  body: resendConfirmEmail.body.extend({
+    otp: z.string().length(6),
+  }),
+};

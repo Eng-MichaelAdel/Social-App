@@ -30,17 +30,17 @@ abstract class BaseRepository<TModel> {
     options,
   }: {
     data: Partial<TModel>;
-    options?: (CreateOptions & SingleCreateOptions) | undefined;
+    options?: (SingleCreateOptions) | undefined;
   }): Promise<HydratedDocument<TModel>>;
 
   create({ data, options }: { data: Partial<TModel>[]; options?: CreateOptions | undefined }): Promise<HydratedDocument<TModel>[]>;
-  
+
   create({
     data,
     options,
   }: {
     data: Partial<TModel> | Partial<TModel>[];
-    options?: (SingleCreateOptions & CreateOptions) | CreateOptions | undefined;
+    options?: SingleCreateOptions  | CreateOptions | undefined;
   }): Promise<HydratedDocument<TModel>[] | HydratedDocument<TModel>> {
     return this.model.create(data as any, options);
   }

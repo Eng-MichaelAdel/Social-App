@@ -1,12 +1,6 @@
-import { GenderEnum, RoleEnum } from "../../Common";
+import z from "zod";
+import { confirmEmail, resendConfirmEmail, signUpBodyBase } from "../../Validators";
 
-export interface ILoginDto {
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string,
-    confirmedPassword: string,
-    phone: string,
-    gender: GenderEnum,
-    role: RoleEnum
-}
+export type TsighnUpDto = z.infer<typeof signUpBodyBase>;
+export type TConfirmEmailDto = z.infer<typeof confirmEmail.body>;
+export type TResendConfirmEmailDto = z.infer<typeof resendConfirmEmail.body>;

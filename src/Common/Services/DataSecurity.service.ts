@@ -19,6 +19,7 @@ class DataSecurityService {
   //* encryption and decryption
   encrypt(plainText: string): string {
     // generate a random initialization vector (IV) for each encryption
+    
     const IV = crypto.randomBytes(encryptionEnv.IV_LENGTH);
 
     // create a cipher using the AES-256-CBC algorithm, the encryption key and the IV

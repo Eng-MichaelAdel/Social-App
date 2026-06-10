@@ -1,7 +1,7 @@
 import { ISuccessResponse } from "../../Types";
 
-const successResponse = <T>({ res, message = "Done", status = 200, data }: ISuccessResponse<T>) => {
-  res.status(status).json({
+const successResponse = ({ res, message = "Done", status = 200, data }: ISuccessResponse) => {
+  return res.status(status).json({
     success: true,
     message,
     status,

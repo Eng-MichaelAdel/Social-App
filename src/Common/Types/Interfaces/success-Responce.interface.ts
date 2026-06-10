@@ -1,8 +1,8 @@
 import { Response } from "express";
 
-export interface ISuccessResponse<T> {
+export interface ISuccessResponse{
   res: Response;
   message?: string;
   status?: number;
-  data?: T;
+  data?:any;
 }
