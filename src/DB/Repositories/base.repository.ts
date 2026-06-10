@@ -60,7 +60,7 @@ abstract class BaseRepository<TModel> {
   }: {
     filter: QueryFilter<TModel>;
     projection?: ProjectionType<TModel> | null;
-    options?: QueryOptions<TModel> & { lean?: true };
+    options: QueryOptions<TModel> & { lean?: true };
   }): Promise<TModel | null>;
 
   findOne({
@@ -99,7 +99,7 @@ abstract class BaseRepository<TModel> {
   }: {
     id: string | ObjectId;
     projection?: ProjectionType<TModel> | null | undefined;
-    options?: QueryOptions<TModel> & { lean?: true };
+    options: QueryOptions<TModel> & { lean?: true };
   }): Promise<TModel | null>;
 
   findById({
@@ -138,7 +138,7 @@ abstract class BaseRepository<TModel> {
   }: {
     filter: QueryFilter<TModel>;
     projection?: ProjectionType<TModel> | null | undefined;
-    options?: QueryOptions<TModel> & { lean?: true };
+    options: QueryOptions<TModel> & { lean?: true };
   }): Promise<TModel[]>;
 
   find({

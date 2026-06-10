@@ -4,14 +4,17 @@ import type { JwtPayload } from "jsonwebtoken";
 import { RoleEnum, TokenTypeEnum } from "../Types/Enums";
 import { BadRequestException, NotFoundException } from "../Utils";
 import { UserRepository } from "../../DB/Repositories";
-import { ICreateLoginCredentials, IGenerateToken, IPayloadData, IReturnLoginCredentials, ISigniture, IVerifyToken } from "../Types";
-
-
+import { ICreateLoginCredentials, IDecodeTokenReturn, IGenerateToken, IPayloadData, IReturnLoginCredentials, ISigniture, IVerifyToken } from "../Types";
+import RedisService from "./Redis.service";
+import { RevokedTokenKeyService } from ".";
 
 const JwtSecrets = envConfig.JWT;
 
 class TokenService {
-  constructor(private userRepository: UserRepository = new UserRepository()) {}
+  constructor(
+    private userRepository: UserRepository = new UserRepository(),
+    private redisService: RedisService = new RedisService(),
+  ) {}
 
   createLoginCredentials({ payload, options, requiredToken }: ICreateLoginCredentials): IReturnLoginCredentials {
     let accessToken: string | undefined;
@@ -53,21 +56,20 @@ class TokenService {
     return { accessToken, refreshToken };
   }
 
-  async decodeToken(token: string) {
+  
+  async decodeToken(token: string):Promise<IDecodeTokenReturn> {
     //  decode token to get role
-    const decodedData = jwt.decode(token) as IPayloadData & JwtPayload;
+    const decodedData = jwt.decode(token) as JwtPayload;
 
     //  check id and role are sent through payload
     if (!decodedData?.id || !decodedData?.role) {
       throw new BadRequestException("invalid payload");
     }
 
-    // --------------------------------------------------------------------------------------------------------------------
-    /*     ! check if there is revoked token
-    if (await get(RevokenKeyFormat(decodedData.id, decodedData.jti))) {
+    //  ! check if there is revoked token
+    if (await this.redisService.get(RevokedTokenKeyService.RevokenKeyFormat({ id: decodedData?.id, Jti: decodedData?.Jti }))) {
       throw new BadRequestException("Invalid login sesssion ,login again");
-    } */
-    // --------------------------------------------------------------------------------------------------------------------
+    }
 
     //  detect Signiture due to Role
     const secret = this._detectSignitureByRoleAndTokenType(decodedData.role, decodedData.tokenType) as string;
@@ -83,12 +85,10 @@ class TokenService {
       throw new NotFoundException("invalid user credentials ,please register");
     }
 
-    // --------------------------------------------------------------------------------------------------------------------
-    /*      ! check if user loggedout
-     if (userData.logoutCredentialTime && userData.logoutCredentialTime.getTime() >= decodedData.iat * 1000) {
-       throw new NotFoundException("Invalid login sesssion");
-     } */
-    // --------------------------------------------------------------------------------------------------------------------
+    // ! check if user loggedout
+    if (userData.logoutCredentialTime && userData.logoutCredentialTime.getTime() >= (decodedData?.iat as number) * 1000) {
+      throw new NotFoundException("Invalid login sesssion");
+    }
 
     return { userData, decodedData };
   }
