@@ -1,6 +1,7 @@
 import { envConfig } from "../../Config";
 import {
   ConflictException,
+  IPayloadData,
   IUser,
   NotFoundException,
   OtpConextEnum,
@@ -9,7 +10,7 @@ import {
   ProviderEnum,
   UnauthorizedException,
 } from "../../Common";
-import { GenerateOtpKeyService, RedisService, TokenService } from "../../Common/Services";
+import { GenerateOtpKeyService, RedisService, RevokedTokenKeyService, TokenService } from "../../Common/Services";
 import { emailEvent, otpTemplate } from "../../Common/Utils/Email";
 
 import { UserRepository } from "../../DB/Repositories";
@@ -17,6 +18,7 @@ import DataSecurityService from "./../../Common/Services/DataSecurity.service";
 import { TConfirmEmailDto, TLoginSchemaDto, TResendConfirmEmailDto, TsighnUpDto } from "./auth.Dto";
 import { OtpMsgtitleEnum } from "../../Common/Utils/Email/email.types";
 import { randomUUID } from "node:crypto";
+import { JwtPayload } from "jsonwebtoken";
 
 interface ICreateAndSendOtp {
   email: {
@@ -133,12 +135,34 @@ class AuthService {
     return { accessToken, refreshToken };
   }
 
+  // * Refresh Token
+  refreshTokenService(decodedData: JwtPayload, issuer: string) {
+    //  check if the sent token is refresh one
+    if (decodedData.tokenType !== "refresh") {
+      throw new UnauthorizedException("invalid token type ,expected refresh token");
+    }
+
+    //  stop generatingnew access token until the used one is expired
+    const expOfAccessToken = JwtSecrets[decodedData.role].accessExp;
+    if (((decodedData.iat as number) + expOfAccessToken) * 1000 > Date.now()) {
+      throw new ConflictException("current acces token is still valid");
+    }
+
+    //  create access and refresh token
+    const { accessToken, refreshToken } = this.buildTokens(decodedData, issuer);
+
+    //  added the used refresh token as revoked one
+    const { id: refreshUserId, jti: refreshJti, exp: refreshExp } = decodedData;
+    RevokedTokenKeyService.createBlacklistToken({ id: refreshUserId, Jti: refreshJti as string, tokenExpInSec: refreshExp as number });
+
+    return { accessToken, refreshToken };
+  }
 
   
 
-  private buildTokens(userData: IUser, issuer: string) {
+  private buildTokens(userData: IUser | IPayloadData, issuer: string) {
     const Credentials = this.tokenService.createLoginCredentials({
-      payload: { id: userData._id as string, email: userData.email, role: userData.role },
+      payload: { id: userData.id as string, email: userData.email, role: userData.role },
       options: {
         access: { expiresIn: JwtSecrets[userData.role].accessExp, jwtid: randomUUID(), issuer, audience: ["web", "mobile"] },
         refresh: { expiresIn: JwtSecrets[userData.role].refreshExp, jwtid: randomUUID(), issuer, audience: ["web", "mobile"] },

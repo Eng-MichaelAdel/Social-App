@@ -1,7 +1,7 @@
 import { Router } from "express";
 import authService from "./auth.service";
 import { successResponse } from "../../Common";
-import { validation } from "../../Middlewares";
+import { Authentication, validation } from "../../Middlewares";
 import { confirmEmail, loginSchema, resendConfirmEmail, signUpSchema } from "../../Validators";
 // import { ILoginResponse } from "./auth.entity";
 
@@ -32,7 +32,12 @@ router.post("/login", validation(loginSchema), async (req, res, next) => {
   successResponse({ res, message: "Login Successfully", data: { Token } });
 });
 
-
+// * Refresh Token
+router.post("/refreshToken", Authentication, async (req, res, next) => {
+  const issuer = `${req.protocol}://${req.host}`;
+  const Token = await authService.refreshTokenService(req.decode, issuer);
+  successResponse({ res, message: "Token Refreshed Successfully", data: { Token } });
+});
 
 
 

@@ -39,7 +39,6 @@ class TokenService {
         break;
 
       default:
-        console.log(detectedSecret);
 
         accessToken = this._generateToken({
           payload: { ...payload, tokenType: TokenTypeEnum.access },
