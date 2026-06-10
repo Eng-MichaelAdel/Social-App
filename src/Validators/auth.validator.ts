@@ -30,6 +30,13 @@ export const signUpSchema = {
   }),
 };
 
+export const loginSchema = {
+  body: z.object({
+    email: generalValidators.user.shape.email,
+    password: generalValidators.user.shape.password,
+  }),
+};
+
 export const resendConfirmEmail = {
   body: z.object({
     email: generalValidators.user.shape.email,

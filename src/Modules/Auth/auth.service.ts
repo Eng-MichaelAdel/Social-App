@@ -1,12 +1,22 @@
-import { ConflictException, IUser, NotFoundException, OtpConextEnum, OtpStateEnum, OtpSubjectEnum, ProviderEnum } from "../../Common";
-import { GenerateOtpKeyService, RedisService } from "../../Common/Services";
+import { envConfig } from "../../Config";
+import {
+  ConflictException,
+  IUser,
+  NotFoundException,
+  OtpConextEnum,
+  OtpStateEnum,
+  OtpSubjectEnum,
+  ProviderEnum,
+  UnauthorizedException,
+} from "../../Common";
+import { GenerateOtpKeyService, RedisService, TokenService } from "../../Common/Services";
 import { emailEvent, otpTemplate } from "../../Common/Utils/Email";
-// import { envConfig } from "../../Config";
 
 import { UserRepository } from "../../DB/Repositories";
 import DataSecurityService from "./../../Common/Services/DataSecurity.service";
-import { TConfirmEmailDto, TResendConfirmEmailDto, TsighnUpDto } from "./auth.Dto";
+import { TConfirmEmailDto, TLoginSchemaDto, TResendConfirmEmailDto, TsighnUpDto } from "./auth.Dto";
 import { OtpMsgtitleEnum } from "../../Common/Utils/Email/email.types";
+import { randomUUID } from "node:crypto";
 
 interface ICreateAndSendOtp {
   email: {
@@ -22,14 +32,14 @@ interface ICreateAndSendOtp {
   };
 }
 
-// const JwtSecrets = envConfig.JWT;
+const JwtSecrets = envConfig.JWT;
 
 class AuthService {
   constructor(
     private userRepository: UserRepository = new UserRepository(),
     private dataSecurityService: DataSecurityService = new DataSecurityService(),
     private redisService: RedisService = new RedisService(),
-    // private tokenService: TokenService = new TokenService(),
+    private tokenService: TokenService = new TokenService(),
   ) {}
 
   //* signup
@@ -107,7 +117,35 @@ class AuthService {
     return;
   }
 
+  //* login
+  async login(userInputs: TLoginSchemaDto, issuer: string) {
+    const { email, password } = userInputs;
 
+    //  check login credintial's validation
+    const user = await this.userRepository.findOne({ filter: { email, isEmailVerified: true } });
+    if (!user || !(await this.dataSecurityService.compareHash(password, user.password))) {
+      throw new UnauthorizedException("Invalid Login Credentials", {});
+    }
+
+    //  generate access and refresh token
+    const { accessToken, refreshToken } = this.buildTokens(user, issuer);
+
+    return { accessToken, refreshToken };
+  }
+
+
+  
+
+  private buildTokens(userData: IUser, issuer: string) {
+    const Credentials = this.tokenService.createLoginCredentials({
+      payload: { id: userData._id as string, email: userData.email, role: userData.role },
+      options: {
+        access: { expiresIn: JwtSecrets[userData.role].accessExp, jwtid: randomUUID(), issuer, audience: ["web", "mobile"] },
+        refresh: { expiresIn: JwtSecrets[userData.role].refreshExp, jwtid: randomUUID(), issuer, audience: ["web", "mobile"] },
+      },
+    });
+    return Credentials;
+  }
 
   private createAndSendOtp = async ({ email: { to, cc, subject, otpMsgTitle }, otp: { otpContext, OtpState, OtpExpInMin } }: ICreateAndSendOtp) => {
     // if resending new Otp .. check blocking or max trials first

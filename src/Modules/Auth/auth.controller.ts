@@ -2,7 +2,7 @@ import { Router } from "express";
 import authService from "./auth.service";
 import { successResponse } from "../../Common";
 import { validation } from "../../Middlewares";
-import { confirmEmail, resendConfirmEmail, signUpSchema } from "../../Validators";
+import { confirmEmail, loginSchema, resendConfirmEmail, signUpSchema } from "../../Validators";
 // import { ILoginResponse } from "./auth.entity";
 
 const router = Router();
@@ -24,6 +24,15 @@ router.post("/resend-confirm-email", validation(resendConfirmEmail), async (req,
   await authService.resendRerifyEmailService(req.body);
   successResponse({ res, message: "Verification Code is sent ,, Please check your email" });
 });
+
+//* login
+router.post("/login", validation(loginSchema), async (req, res, next) => {
+  const issuer = `${req.protocol}://${req.host}`;
+  const Token = await authService.login(req.body, issuer);
+  successResponse({ res, message: "Login Successfully", data: { Token } });
+});
+
+
 
 
 

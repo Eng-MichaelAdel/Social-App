@@ -1,6 +1,7 @@
 import { GenderEnum, ProviderEnum, RoleEnum, StatusEnum } from "../Enums";
 
 export interface IUser {
+  _id?: string;
   firstName: string;
   lastName: string;
   userName?: string;
