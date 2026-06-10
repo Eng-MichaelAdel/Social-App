@@ -137,4 +137,4 @@ class GenerateOtpKeyService {
 
 }
 
-export default GenerateOtpKeyService;
+export default new GenerateOtpKeyService();

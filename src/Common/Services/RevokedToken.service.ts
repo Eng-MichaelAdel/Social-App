@@ -9,20 +9,20 @@ class RevokedTokenKeyService {
     return tokenExpInSec - currentTimeInSec;
   }
 
-  private RevokenKeyFormat({ keyData, KeyValue }: { keyData: string; KeyValue: UUID }): string {
-    if (!KeyValue) {
-      return `RT_${keyData}`;
+  RevokenKeyFormat({ id, Jti }: { id: string; Jti: UUID }): string {
+    if (!Jti) {
+      return `RT_${id}`;
     }
-    return `RT_${keyData}_${KeyValue}`;
+    return `RT_${id}_${Jti}`;
   }
 
   createBlacklistToken({
-    keyData,
-    KeyValue,
+    id,
+    Jti,
     tokenExpInSec,
   }: {
-    keyData: string;
-    KeyValue: UUID;
+    id: string;
+    Jti: UUID;
     tokenExpInSec: number;
   }): Promise<string | null> | undefined {
     let ttlSeconds = this.calculateTTL(tokenExpInSec);
@@ -30,8 +30,8 @@ class RevokedTokenKeyService {
       console.log("Token is already Expired");
       return;
     }
-    return this.redisServise.set({ key: this.RevokenKeyFormat({ keyData, KeyValue }), value: KeyValue, options: { EX: ttlSeconds } });
+    return this.redisServise.set({ key: this.RevokenKeyFormat({ id, Jti }), value: Jti, options: { EX: ttlSeconds } });
   }
 }
 
-export default RevokedTokenKeyService;
+export default new RevokedTokenKeyService();

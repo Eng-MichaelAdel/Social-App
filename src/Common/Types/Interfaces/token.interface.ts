@@ -1,5 +1,7 @@
 import { PrivateKey, PublicKey, Secret, SignOptions, VerifyOptions } from "jsonwebtoken";
 import { RoleEnum, TokenTypeEnum } from "../Enums";
+import { IUser } from "./user.interface";
+import { HydratedDocument } from 'mongoose';
 
 export interface IGenerateToken {
   payload: IPayloadData;
@@ -37,4 +39,9 @@ export interface ICreateLoginCredentials {
 export interface IReturnLoginCredentials {
   accessToken: string | undefined;
   refreshToken: string | undefined;
+}
+
+export interface IDecodeTokenReturn {
+  userData: HydratedDocument<IUser>;
+  decodedData: IPayloadData;
 }
