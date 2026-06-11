@@ -7,7 +7,7 @@ import { BadRequestException } from "../Error";
 export const sendEmail = async ({ to, cc, subject, attachments = [], html }: Mail.Options): Promise<void> => {
   try {
     await transporter.sendMail({
-      from: `"Sarah-aApp" <${envConfig.EMAIL.user}>`,
+      from: `"Social-aApp" <${envConfig.EMAIL.user}>`,
       to,
       cc,
       subject,

@@ -3,7 +3,7 @@ import { IDecodeTokenReturn, UnauthorizedException } from "../Common";
 import TokenService from "../Common/Services/token.service.js";
 
 
-export const userAuthenticate = async (req: Request, res: Response, next: NextFunction) => {
+const userAuthenticate = async (req: Request, res: Response, next: NextFunction) => {
   //  get access token from headers
   const { authorization } = req.headers;
 
@@ -27,7 +27,7 @@ export const userAuthenticate = async (req: Request, res: Response, next: NextFu
   next();
 };
 
-export const decodeTokenByAuthType = async (prefix:string, token:string) => {
+const decodeTokenByAuthType = async (prefix:string, token:string) => {
   const tokenService = new TokenService();
   let userData;
   switch (prefix) {
@@ -46,3 +46,5 @@ export const decodeTokenByAuthType = async (prefix:string, token:string) => {
 
   return userData;
 };
+
+export default userAuthenticate

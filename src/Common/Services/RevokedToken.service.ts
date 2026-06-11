@@ -1,5 +1,4 @@
 import RedisService from "./Redis.service";
-import { UUID } from "node:crypto";
 
 class RevokedTokenKeyService {
   constructor(private redisServise = new RedisService()) {}
@@ -9,11 +8,13 @@ class RevokedTokenKeyService {
     return tokenExpInSec - currentTimeInSec;
   }
 
-  RevokenKeyFormat({ id, Jti }: { id: string; Jti: UUID }): string {
+  RevokenKeyFormat({ id, Jti }: { id: string; Jti?: string }): string {
     if (!Jti) {
       return `RT_${id}`;
     }
+    
     return `RT_${id}_${Jti}`;
+
   }
 
   createBlacklistToken({
@@ -22,7 +23,7 @@ class RevokedTokenKeyService {
     tokenExpInSec,
   }: {
     id: string;
-    Jti: UUID;
+    Jti: string;
     tokenExpInSec: number;
   }): Promise<string | null> | undefined {
     let ttlSeconds = this.calculateTTL(tokenExpInSec);

@@ -28,7 +28,7 @@ export interface ISetAllOtpKeysToDatabase extends IOtpKeyBaseProperties {
 }
 
 export interface IVerifyOtp {
-  otpValue: number;
+  otpValue: string;
   otpUserData: string;
   otpContext: OtpConextEnum;
 }

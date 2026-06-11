@@ -1,7 +1,7 @@
 export interface ITemplateData {
   otp: number;
   expInMin: number;
-  title: string;
+  title: string | OtpMsgtitleEnum;
 }
 
 export enum OtpMsgtitleEnum {

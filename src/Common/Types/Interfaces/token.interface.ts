@@ -1,4 +1,4 @@
-import { PrivateKey, PublicKey, Secret, SignOptions, VerifyOptions } from "jsonwebtoken";
+import { JwtPayload, PrivateKey, PublicKey, Secret, SignOptions, VerifyOptions } from "jsonwebtoken";
 import { RoleEnum, TokenTypeEnum } from "../Enums";
 import { IUser } from "./user.interface";
 import { HydratedDocument } from 'mongoose';
@@ -43,5 +43,5 @@ export interface IReturnLoginCredentials {
 
 export interface IDecodeTokenReturn {
   userData: HydratedDocument<IUser>;
-  decodedData: IPayloadData;
+  decodedData: JwtPayload;
 }

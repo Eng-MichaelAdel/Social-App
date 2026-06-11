@@ -19,7 +19,7 @@ class GenerateOtpKeyService {
     private redisServise = new RedisService(),
   ) {}
 
-  private baseOtpKey({ otpUserData, otpContext }: { otpUserData: string; otpContext?: OtpConextEnum }): string {
+ baseOtpKey({ otpUserData, otpContext }: { otpUserData: string; otpContext?: OtpConextEnum }): string {
     if (!otpContext) {
       return `OTP::${otpUserData}`;
     }
@@ -112,7 +112,6 @@ class GenerateOtpKeyService {
   async setAllOtpKeysToDatabase({ otpValue, otpUserData, otpContext, OtpExpInMin, OtpState }: ISetAllOtpKeysToDatabase): Promise<void> {
     await this.setOtpBaseKey({ otpValue, otpUserData, otpContext, OtpExpInMin });
     await this.handleSetOrIncrMaxTrialKey({ otpUserData, otpContext, OtpExpInMin, OtpState });
-    await this.setBlockKey({ otpUserData, otpContext, OtpExpInMin, OtpState });
   }
 
   generateOtpValue(): number {
