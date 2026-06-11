@@ -42,8 +42,16 @@ export const resendConfirmEmail = {
     email: generalValidators.user.shape.email,
   }),
 };
+
 export const confirmEmail = {
   body: resendConfirmEmail.body.extend({
     otp: z.string().length(6),
+  }),
+};
+
+export const resetForgotPassword = {
+  body: confirmEmail.body.extend({
+    password: generalValidators.user.shape.password,
+    confirmedPassword: generalValidators.user.shape.confirmedPassword,
   }),
 };

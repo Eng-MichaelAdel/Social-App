@@ -15,7 +15,7 @@ import { emailEvent, otpTemplate } from "../../Common/Utils/Email";
 
 import { UserRepository } from "../../DB/Repositories";
 import DataSecurityService from "./../../Common/Services/DataSecurity.service";
-import { TConfirmEmailDto, TLoginSchemaDto, TResendConfirmEmailDto, TsighnUpDto } from "./auth.Dto";
+import { TConfirmEmailDto, TLoginSchemaDto, TResendConfirmEmailDto, TResetForgotPasswordDto, TsighnUpDto } from "./auth.Dto";
 import { OtpMsgtitleEnum } from "../../Common/Utils/Email/email.types";
 import { randomUUID } from "node:crypto";
 import { JwtPayload } from "jsonwebtoken";
@@ -158,7 +158,64 @@ class AuthService {
     return { accessToken, refreshToken };
   }
 
-  
+  //* Request ForgotPassword Code
+  async requestForgetPasswordCode(body: { email: string }) {
+    const { email } = body;
+
+    // check user account is on DB
+    const userAccount = await this.userRepository.findOne({ filter: { email, provider: ProviderEnum.System, isEmailVerified: true } });
+    if (!userAccount) {
+      throw new NotFoundException("user is not Regestered");
+    }
+
+    // create and Send Verification OTP mail
+    await this.createAndSendOtp({
+      email: { to: userAccount.email, cc: "michael_cicilengineer@yahoo.com" },
+      otp: { otpContext: OtpConextEnum.password, OtpExpInMin: 1, OtpState: OtpStateEnum.resend },
+    });
+
+    return;
+  }
+
+  //* Verify ForgotPassword Code
+  async verifyForgetPasswordCode(body: TConfirmEmailDto) {
+    const { email, otp } = body;
+
+    // Verifying OTP and check the expiration (not expired)
+    await GenerateOtpKeyService.verifyOtp({ otpValue: otp, otpUserData: email, otpContext: OtpConextEnum.password });
+
+    return;
+  }
+
+  //* reset ForgotPassword Code
+  async resetForgetPassword(body: TResetForgotPasswordDto) {
+    const { email, otp, password, confirmedPassword } = body;
+
+    // Verifying OTP and check the expiration (not expired)
+    await GenerateOtpKeyService.verifyOtp({ otpValue: otp, otpUserData: email, otpContext: OtpConextEnum.password });
+
+    // check user account and update password on DB
+    const userAccount = await this.userRepository.findOneAndUpdate({
+      filter: { email, provider: ProviderEnum.System, isEmailVerified: true },
+      update: {
+        password: await this.dataSecurityService.generateHash(password),
+        confirmedPassword: await this.dataSecurityService.generateHash(confirmedPassword),
+        logoutCredentialTime: Date.now(),
+      },
+    });
+    if (!userAccount) {
+      throw new NotFoundException("user is not Regestered");
+    }
+
+    // delete the saved OTP keys
+    const otpKeys = await this.redisService.keys(GenerateOtpKeyService.baseOtpKey({ otpUserData: email, otpContext: OtpConextEnum.password }));
+    const existsRevokedKeys = await this.redisService.keys(`${RevokedTokenKeyService.RevokenKeyFormat({ id: userAccount.id as string })}*`);
+    this.redisService.del([...otpKeys, ...existsRevokedKeys]);
+
+    return;
+  }
+
+  // ^--------------------------------------------------------------------------------------------------------------------------------------------^ //
 
   private buildTokens(userData: IUser | IPayloadData, issuer: string) {
     const Credentials = this.tokenService.createLoginCredentials({

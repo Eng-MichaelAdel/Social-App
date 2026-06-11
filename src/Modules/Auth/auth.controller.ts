@@ -2,7 +2,7 @@ import { Router } from "express";
 import authService from "./auth.service";
 import { successResponse } from "../../Common";
 import { Authentication, validation } from "../../Middlewares";
-import { confirmEmail, loginSchema, resendConfirmEmail, signUpSchema } from "../../Validators";
+import { confirmEmail, loginSchema, resendConfirmEmail, resetForgotPassword, signUpSchema } from "../../Validators";
 // import { ILoginResponse } from "./auth.entity";
 
 const router = Router();
@@ -39,6 +39,22 @@ router.post("/refreshToken", Authentication, async (req, res, next) => {
   successResponse({ res, message: "Token Refreshed Successfully", data: { Token } });
 });
 
+//* Request ForgotPassword Code
+router.post("/request-forgetPassword-code", validation(resendConfirmEmail), async (req, res, next) => {
+  await authService.requestForgetPasswordCode(req.body);
+  successResponse({ res, message: "reset Code is sent ,, Please check your email" });
+});
 
+//* Verify ForgotPassword Code
+router.patch("/verify-forgetPassword-code", validation(confirmEmail), async (req, res, next) => {
+  await authService.verifyForgetPasswordCode(req.body);
+  successResponse({ res, message: "the Code is Verified" });
+});
+
+//* Reset ForgotPassword
+router.put("/reset-forgetPassword", validation(resetForgotPassword), async (req, res, next) => {
+  await authService.resetForgetPassword(req.body);
+  successResponse({ res, message: "your password is reset" });
+});
 
 export default router;

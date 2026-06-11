@@ -8,7 +8,7 @@ class RevokedTokenKeyService {
     return tokenExpInSec - currentTimeInSec;
   }
 
-  RevokenKeyFormat({ id, Jti }: { id: string; Jti: string }): string {
+  RevokenKeyFormat({ id, Jti }: { id: string; Jti?: string }): string {
     if (!Jti) {
       return `RT_${id}`;
     }
