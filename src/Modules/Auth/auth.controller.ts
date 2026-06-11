@@ -57,4 +57,14 @@ router.put("/reset-forgetPassword", validation(resetForgotPassword), async (req,
   successResponse({ res, message: "your password is reset" });
 });
 
+//* Logout
+router.post("/logout", Authentication, async (req, res, next) => {
+  const message = await authService.logoutService({
+    userAccount: req.user,
+    accessDecodedData: req.decode,
+    refreshToken: req.headers.refreshtoken ,
+    logoutFromAll: req.body.logoutFromAll,
+  });
+  successResponse({ res, message });
+});
 export default router;

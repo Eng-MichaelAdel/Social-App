@@ -4,7 +4,15 @@ import type { JwtPayload } from "jsonwebtoken";
 import { RoleEnum, TokenTypeEnum } from "../Types/Enums";
 import { BadRequestException, NotFoundException } from "../Utils";
 import { UserRepository } from "../../DB/Repositories";
-import { ICreateLoginCredentials, IDecodeTokenReturn, IGenerateToken, IPayloadData, IReturnLoginCredentials, ISigniture, IVerifyToken } from "../Types";
+import {
+  ICreateLoginCredentials,
+  IDecodeTokenReturn,
+  IGenerateToken,
+  IPayloadData,
+  IReturnLoginCredentials,
+  ISigniture,
+  IVerifyToken,
+} from "../Types";
 import RedisService from "./Redis.service";
 import { RevokedTokenKeyService } from ".";
 
@@ -39,6 +47,7 @@ class TokenService {
         break;
 
       default:
+        console.log({ access: (detectedSecret as ISigniture).accessSignature, refresh: (detectedSecret as ISigniture).refreshSignature });
 
         accessToken = this._generateToken({
           payload: { ...payload, tokenType: TokenTypeEnum.access },
@@ -55,8 +64,7 @@ class TokenService {
     return { accessToken, refreshToken };
   }
 
-  
-  async decodeToken(token: string):Promise<IDecodeTokenReturn> {
+  async decodeToken(token: string): Promise<IDecodeTokenReturn> {
     //  decode token to get role
     const decodedData = jwt.decode(token) as JwtPayload;
 
@@ -66,10 +74,10 @@ class TokenService {
     }
 
     //  ! check if there is revoked token
-    if (await this.redisService.get(RevokedTokenKeyService.RevokenKeyFormat({ id: decodedData?.id, Jti: decodedData?.Jti }))) {
-      throw new BadRequestException("Invalid login sesssion ,login again");
+    const revokedKey = RevokedTokenKeyService.RevokenKeyFormat({ id: decodedData?.id, Jti: decodedData?.jti as string });
+    if (await this.redisService.get(revokedKey)) {
+      throw new BadRequestException("Invalid login sesssion ");
     }
-
     //  detect Signiture due to Role
     const secret = this._detectSignitureByRoleAndTokenType(decodedData.role, decodedData.tokenType) as string;
 

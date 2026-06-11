@@ -12,10 +12,9 @@ import {
 } from "../../Common";
 import { GenerateOtpKeyService, RedisService, RevokedTokenKeyService, TokenService } from "../../Common/Services";
 import { emailEvent, otpTemplate } from "../../Common/Utils/Email";
-
 import { UserRepository } from "../../DB/Repositories";
 import DataSecurityService from "./../../Common/Services/DataSecurity.service";
-import { TConfirmEmailDto, TLoginSchemaDto, TResendConfirmEmailDto, TResetForgotPasswordDto, TsighnUpDto } from "./auth.Dto";
+import { TConfirmEmailDto, TLoginSchemaDto, TLogoutServiceDto, TResendConfirmEmailDto, TResetForgotPasswordDto, TsighnUpDto } from "./auth.Dto";
 import { OtpMsgtitleEnum } from "../../Common/Utils/Email/email.types";
 import { randomUUID } from "node:crypto";
 import { JwtPayload } from "jsonwebtoken";
@@ -215,6 +214,32 @@ class AuthService {
     return;
   }
 
+  // * Logout
+  async logoutService({ userAccount, accessDecodedData, refreshToken, logoutFromAll }: TLogoutServiceDto) {
+    switch (logoutFromAll) {
+      case true:
+        userAccount.logoutCredentialTime = new Date();
+        await userAccount.save();
+        const existsRevokedKeys = await this.redisService.keys(`${RevokedTokenKeyService.RevokenKeyFormat({ id: userAccount.id })}`);
+        await this.redisService.del(existsRevokedKeys);
+        return "logout is done successfully from all devices";
+
+      default:
+        const { decodedData: refreshDecodedData } = await this.tokenService.decodeToken(refreshToken as string);
+        if (accessDecodedData.id !== refreshDecodedData.id) {
+          throw new UnauthorizedException("ACCESS_REFRESH_MISMATCH");
+        }
+        const { id: accessUserId, jti: accessJti, exp: accessExp } = accessDecodedData;
+        const { id: refreshUserId, jti: refreshJti, exp: refreshExp } = refreshDecodedData;
+
+        Promise.all([
+          RevokedTokenKeyService.createBlacklistToken({ id: accessUserId, Jti: accessJti as string, tokenExpInSec: accessExp as number }),
+          RevokedTokenKeyService.createBlacklistToken({ id: refreshUserId, Jti: refreshJti as string, tokenExpInSec: refreshExp as number }),
+        ]);
+
+        return "logout is done successfully from your device";
+    }
+  }
   // ^--------------------------------------------------------------------------------------------------------------------------------------------^ //
 
   private buildTokens(userData: IUser | IPayloadData, issuer: string) {

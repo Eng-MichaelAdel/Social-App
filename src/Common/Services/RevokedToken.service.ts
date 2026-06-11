@@ -12,7 +12,9 @@ class RevokedTokenKeyService {
     if (!Jti) {
       return `RT_${id}`;
     }
+    
     return `RT_${id}_${Jti}`;
+
   }
 
   createBlacklistToken({
