@@ -1,9 +1,11 @@
 import express, { Application } from "express";
+import cors from "cors";
 import { envConfig } from "./Config";
 import { authRouter, commentRouter, postRouter, userRouter } from "./Modules";
 import { globalErrorHandler } from "./Middlewares";
 import dbConnetion from "./DB/db.connection";
 import { RedisService } from "./Common/Services";
+import { corsOptions } from "./Config/cors.config";
 
 const bootstrap = async (): Promise<void> => {
   // create app instance from express
@@ -17,6 +19,8 @@ const bootstrap = async (): Promise<void> => {
 
   //function to handle middlewares
   function initializeCommonMiddlewares(app: Application) {
+    //  cors
+    app.use(cors(corsOptions));
     // parse body to JSON
     app.use(express.json());
   }

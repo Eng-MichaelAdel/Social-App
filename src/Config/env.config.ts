@@ -44,6 +44,14 @@ const envConfig = {
       process.env.REDIS_URL ??
       "rediss://default:gQAAAAAAAY_zAAIocDIxZjM5NjY2NDRlZDk0MmM5OWYwYmE2M2UzMmJiNzVmM3AyMTAyMzg3@new-lamprey-102387.upstash.io:6379",
   },
+
+  CORS: {
+    cors_whitelist_origin: process.env.CORS_WHITELIST_ORIGIN ?? "http://localhost:4200,http://localhost:2040",
+  },
+
+  GCP:{
+    Gcp_client_id : process.env.GCP_CLIENT_ID ?? "16643267836-4ogqldipg16o0p3aspr1b80rt623s9em.apps.googleusercontent.com"
+  }
 };
 
 export default envConfig;
