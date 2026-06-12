@@ -15,7 +15,7 @@ export interface IUser {
   gender: GenderEnum;
   role: RoleEnum;
   status?: StatusEnum;
-  provider: ProviderEnum;
+  provider: ProviderEnum[];
 
   profielPictuer?: string;
   coverProfilePicture?: string[];

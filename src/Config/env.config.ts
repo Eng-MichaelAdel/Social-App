@@ -46,12 +46,12 @@ const envConfig = {
   },
 
   CORS: {
-    cors_whitelist_origin: process.env.CORS_WHITELIST_ORIGIN ?? "http://localhost:4200,http://localhost:2040",
+    cors_whitelist_origin: process.env.CORS_WHITELIST_ORIGIN?.split(",") ?? ["http://localhost:4200"],
   },
 
-  GCP:{
-    Gcp_client_id : process.env.GCP_CLIENT_ID ?? "16643267836-4ogqldipg16o0p3aspr1b80rt623s9em.apps.googleusercontent.com"
-  }
+  GCP: {
+    Gcp_client_id: process.env.GCP_CLIENT_ID ?? "16643267836-4ogqldipg16o0p3aspr1b80rt623s9em.apps.googleusercontent.com",
+  },
 };
 
 export default envConfig;

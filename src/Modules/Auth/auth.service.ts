@@ -9,6 +9,7 @@ import {
   OtpSubjectEnum,
   ProviderEnum,
   UnauthorizedException,
+  verifyGcpIdToken,
 } from "../../Common";
 import { GenerateOtpKeyService, RedisService, RevokedTokenKeyService, TokenService } from "../../Common/Services";
 import { emailEvent, otpTemplate } from "../../Common/Utils/Email";
@@ -18,6 +19,8 @@ import { TConfirmEmailDto, TLoginSchemaDto, TLogoutServiceDto, TResendConfirmEma
 import { OtpMsgtitleEnum } from "../../Common/Utils/Email/email.types";
 import { randomUUID } from "node:crypto";
 import { JwtPayload } from "jsonwebtoken";
+import { TokenPayload } from "google-auth-library";
+import { HydratedDocument } from "mongoose";
 
 interface ICreateAndSendOtp {
   email: {
@@ -46,14 +49,12 @@ class AuthService {
   //* signup
   async signup(userInputs: TsighnUpDto): Promise<IUser> {
     //  check email exist
-    const emailExist = await this.userRepository.findOne({
+    const userExist = await this.userRepository.findOne({
       filter: { email: userInputs.email },
-      projection: { email: 1, _id: 0 },
-      options: { lean: true },
     });
 
-    if (emailExist) {
-      throw new ConflictException("email is already exist");
+    if (userExist && userExist.provider.includes(ProviderEnum.System)) {
+      throw new ConflictException("email is already registered");
     }
 
     //  hash password and confirmed password
@@ -67,10 +68,21 @@ class AuthService {
 
     // create and Send Verification OTP mail
     await this.createAndSendOtp({
-      email: { to: userInputs.email, cc: "michael_cicilengineer@yahoo.com" },
+      email: { to: userInputs.email, cc: "michael_civilengineer@yahoo.com" },
       otp: { otpContext: OtpConextEnum.email, OtpExpInMin: 1, OtpState: OtpStateEnum.new },
     });
 
+    // so ther is an account already created by providers like google , facebookr ..etc
+    // so just update the account
+    if(userExist && userExist.provider.length !== 0){
+      userExist.password = userInputs.password;
+      userExist.confirmedPassword = userInputs.confirmedPassword;
+      userExist.gender = userInputs.gender;
+      userExist.DOB = userInputs.DOB;
+      userExist.provider.push(ProviderEnum.System);
+      userExist.save();
+      return userExist;
+    }
     //  create user
     const user = await this.userRepository.create({ data: userInputs });
     return user;
@@ -109,9 +121,11 @@ class AuthService {
       throw new NotFoundException("Fail to find matching account");
     }
 
+    console.log(userAccount);
+    
     // create and Send Verification OTP mail
     await this.createAndSendOtp({
-      email: { to: userAccount.email, cc: "michael_cicilengineer@yahoo.com" },
+      email: { to: userAccount.email, cc: "michael_civilengineer@yahoo.com" },
       otp: { otpContext: OtpConextEnum.email, OtpExpInMin: 1, OtpState: OtpStateEnum.resend },
     });
 
@@ -169,7 +183,7 @@ class AuthService {
 
     // create and Send Verification OTP mail
     await this.createAndSendOtp({
-      email: { to: userAccount.email, cc: "michael_cicilengineer@yahoo.com" },
+      email: { to: userAccount.email, cc: "michael_civilengineer@yahoo.com" },
       otp: { otpContext: OtpConextEnum.password, OtpExpInMin: 1, OtpState: OtpStateEnum.resend },
     });
 
@@ -240,6 +254,50 @@ class AuthService {
         return "logout is done successfully from your device";
     }
   }
+
+  // * Gmail Registertion
+  async gmailRegisterService(idToken: string, issuer: string) {
+    // verify gcp idToken
+    const payload = await verifyGcpIdToken(idToken);
+
+    //  find if the accunt is exist
+    const user = await this.userRepository.findOne({
+      filter: {
+        $or: [{ googleSub: payload.sub }, { email: payload.email as string }],
+      },
+    });
+
+    //  update the user account if exist else create a new one
+    const userData = await this.handleUpdateOrCreateGoogleAccount(user, payload);
+
+    //  generate access and refresh token
+    const { accessToken, refreshToken } = this.buildTokens(userData as IUser, issuer);
+
+    return { accessToken, refreshToken };
+  }
+
+  // * Gmail Login
+  async gmailLogInService(idToken: string, issuer: string) {
+    // verify gcp idToken
+    const payload = await verifyGcpIdToken(idToken);
+
+    //  find if the accunt is exist
+    const user = await this.userRepository.findOne({
+      filter: { $or: [{ googleSub: payload.sub }, { email: payload.email as string }] },
+    });
+
+    console.log(user);
+
+    if (!user) {
+      throw new NotFoundException("user not registered");
+    }
+
+    //  generate access and refresh token
+    const { accessToken, refreshToken } = this.buildTokens(user, issuer);
+
+    return { accessToken, refreshToken };
+  }
+
   // ^--------------------------------------------------------------------------------------------------------------------------------------------^ //
 
   private buildTokens(userData: IUser | IPayloadData, issuer: string) {
@@ -269,6 +327,37 @@ class AuthService {
     // save the otp Keys to database
     GenerateOtpKeyService.setAllOtpKeysToDatabase({ otpValue: otp, otpUserData: to, otpContext, OtpState, OtpExpInMin });
     return;
+  };
+
+  private handleUpdateOrCreateGoogleAccount = async (user: HydratedDocument<IUser> | null, payload: TokenPayload) => {
+    const { given_name, family_name, email, picture, sub } = payload;
+    if (user) {
+      user.firstName = given_name as string;
+      user.lastName = family_name as string;
+      user.email = email as string;
+      user.profielPictuer = picture as string;
+      if (!user.provider.includes(ProviderEnum.Google)) {
+        user.provider.push(ProviderEnum.Google);
+        user.googleSub = sub as string;
+      }
+
+      await user.save();
+      return user;
+    } else {
+      // const hashedPassword = await this.dataSecurityService.generateHash(crypto.randomBytes(12).toString("hex"));
+      return await this.userRepository.create({
+        data: {
+          googleSub: sub as string,
+          firstName: given_name as string,
+          lastName: family_name as string,
+          email: email as string,
+          profielPictuer: picture as string,
+          // password: hashedPassword,
+          // confirmedPassword: hashedPassword,
+          provider: [ProviderEnum.Google],
+        },
+      });
+    }
   };
 }
 export default new AuthService();

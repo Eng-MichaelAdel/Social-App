@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema<IUser>(
     password: {
       type: String,
       required: function (this) {
-        return this.provider == ProviderEnum.System;
+        return this.provider.at(-1) == ProviderEnum.System;
       },
     },
     confirmedPassword: { type: String },
@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema<IUser>(
     gender: { type: String, enum: GenderEnum },
     role: { type: String, enum: RoleEnum, default: RoleEnum.User },
     status: { type: String, enum: StatusEnum },
-    provider: { type: String, enum: ProviderEnum, default: ProviderEnum.System },
+    provider: { type: [{ type: String, enum: ProviderEnum }], default: [ProviderEnum.System] },
 
     profielPictuer: { type: String },
     coverProfilePicture: [String],

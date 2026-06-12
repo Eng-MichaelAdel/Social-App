@@ -47,7 +47,6 @@ class TokenService {
         break;
 
       default:
-        console.log({ access: (detectedSecret as ISigniture).accessSignature, refresh: (detectedSecret as ISigniture).refreshSignature });
 
         accessToken = this._generateToken({
           payload: { ...payload, tokenType: TokenTypeEnum.access },
