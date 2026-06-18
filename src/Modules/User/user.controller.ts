@@ -2,7 +2,7 @@ import { Router } from "express";
 import { Authentication, validation } from "../../Middlewares";
 import userService from "./user.service";
 import { successResponse } from "../../Common";
-import { updatePasswordSchema, updateProfileShcema } from "../../Validators";
+import { SharedProfileSchema, updatePasswordSchema, updateProfileShcema } from "../../Validators";
 
 const router = Router();
 
@@ -37,11 +37,11 @@ router.patch("/update-password", Authentication, validation(updatePasswordSchema
 //   return successResponse({ res, message: "profile cover Pictures is Uploaded seccessfully", data: user });
 // });
 
-// // * get Shared Profile
-// router.get("/:userId/shared-profile", validation(SharedProfileSchema), async (req, res, next) => {
-//   const profile = await userService.getSharedProfile(req.params.userId);
-//   return successResponse({ res, data: { profile } });
-// });
+// * get Shared Profile
+router.get("/:userId/shared-profile", validation(SharedProfileSchema), async (req, res, next) => {
+  const profile = await userService.getSharedProfile(req.params as { userId: string });
+  return successResponse({ res, data: { profile } });
+});
 
 // // * delete Profile
 // router.delete("/delete", Authentication, async (req, res, next) => {
