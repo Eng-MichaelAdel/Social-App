@@ -1,5 +1,9 @@
 import mongoose, { Model } from "mongoose";
-import { GenderEnum, IUser, ProviderEnum, RoleEnum, StatusEnum } from "../../Common";
+import { GenderEnum, IUser, OtpConextEnum, OtpStateEnum, ProviderEnum, RoleEnum, StatusEnum } from "../../Common";
+import { DataSecurityService } from "../../Common/Services";
+import authService from "../../Modules/Auth/auth.service";
+
+const dataSecurityService = new DataSecurityService();
 
 const userSchema = new mongoose.Schema<IUser>(
   {
@@ -21,7 +25,7 @@ const userSchema = new mongoose.Schema<IUser>(
     password: {
       type: String,
       required: function (this) {
-        return this.provider == ProviderEnum.System;
+        return this.provider.at(-1) == ProviderEnum.System;
       },
     },
     confirmedPassword: { type: String },
@@ -32,7 +36,7 @@ const userSchema = new mongoose.Schema<IUser>(
     gender: { type: String, enum: GenderEnum },
     role: { type: String, enum: RoleEnum, default: RoleEnum.User },
     status: { type: String, enum: StatusEnum },
-    provider: { type: String, enum: ProviderEnum, default: ProviderEnum.System },
+    provider: { type: [{ type: String, enum: ProviderEnum }], default: [ProviderEnum.System] },
 
     profielPictuer: { type: String },
     coverProfilePicture: [String],
@@ -64,6 +68,28 @@ userSchema
     const [firstName, lastName] = value.split(" ");
     this.set({ firstName, lastName });
   });
+
+userSchema.pre("save", async function () {
+  if (this.isModified("password")) {
+    this.password = await dataSecurityService.generateHash(this.password);
+  }
+  if (this.isModified("confirmedPassword")) {
+    this.confirmedPassword = await dataSecurityService.generateHash(this.confirmedPassword);
+  }
+  if (this.phone && this.isModified("phone")) {
+    this.phone = dataSecurityService.encrypt(this.phone);
+  }
+});
+
+userSchema.post("save", async function () {
+  if (this.provider.at(-1) == ProviderEnum.System && this.isEmailVerified === false) {
+    // create and Send Verification OTP mail
+    await authService.createAndSendOtp({
+      email: { to: this.email, cc: "michael_civilengineer@yahoo.com" },
+      otp: { otpContext: OtpConextEnum.email, OtpExpInMin: 1, OtpState: OtpStateEnum.new },
+    });
+  }
+});
 
 const user: Model<IUser> = mongoose.models.user || mongoose.model<IUser>("user", userSchema);
 

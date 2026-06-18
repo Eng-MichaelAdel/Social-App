@@ -14,6 +14,7 @@ const userAuthenticate = async (req: Request, res: Response, next: NextFunction)
 
   //  detect the type of authorization token
   const [prefix, token] = authorization.split(" ");
+  
   if (prefix !== "Bearer") {
     throw new UnauthorizedException("invalid Authorization type , Expected Bearer token");
   }
