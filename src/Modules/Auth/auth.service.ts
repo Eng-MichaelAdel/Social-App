@@ -289,7 +289,7 @@ class AuthService {
 
   // ^--------------------------------------------------------------------------------------------------------------------------------------------^ //
 
-  private buildTokens(userData: IUser | IPayloadData, issuer: string) {
+buildTokens(userData: IUser | IPayloadData, issuer: string) {
     const Credentials = this.tokenService.createLoginCredentials({
       payload: { id: userData.id as string, email: userData.email, role: userData.role },
       options: {

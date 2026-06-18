@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema<IUser>(
     confirmedPassword: { type: String },
     phone: { type: String },
     DOB: { type: String },
-    oldPasswords: [String],
+    oldPasswords: { type: [String], default: [] },
 
     gender: { type: String, enum: GenderEnum },
     role: { type: String, enum: RoleEnum, default: RoleEnum.User },
@@ -72,6 +72,8 @@ userSchema
 userSchema.pre("save", async function () {
   if (this.isModified("password")) {
     this.password = await dataSecurityService.generateHash(this.password);
+    this.oldPasswords.push(this.password);
+    if (this.oldPasswords.length > 5) this.oldPasswords = this.oldPasswords.slice(-5);
   }
   if (this.isModified("confirmedPassword")) {
     this.confirmedPassword = await dataSecurityService.generateHash(this.confirmedPassword);

@@ -94,13 +94,12 @@ class RedisService {
 
   del(keys: string | string[]): Promise<number> {
     try {
-      if (Array.isArray(keys)) {
+      if (Array.isArray(keys)) {        
         if (!keys.length) throw new BadRequestException("Please enter a valid keys");
       }
-
       return RedisService.client.del(keys);
     } catch (error) {
-      throw new BadRequestException("fail in Redis DEL Opreration", error);
+      throw new BadRequestException("fail in Redis DEL Opreration" , error);
     }
   }
 

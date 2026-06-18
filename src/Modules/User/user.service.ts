@@ -2,8 +2,10 @@ import { HydratedDocument } from "mongoose";
 import { DataSecurityService, RedisService, TokenService } from "../../Common/Services";
 import { envConfig } from "../../Config";
 import { UserRepository } from "../../DB/Repositories";
-import { ConflictException, IUser } from "../../Common";
-import { TUpdateProfileShcemaDto } from "./user.Dto";
+import { ConflictException, IUser, UnauthorizedException } from "../../Common";
+import { TUpdatePasswordSchemaDto, TUpdateProfileShcemaDto } from "./user.Dto";
+import RevokedTokenService from "../../Common/Services/RevokedToken.service";
+import authService from "../Auth/auth.service";
 
 const JwtSecrets = envConfig.JWT;
 
@@ -33,7 +35,6 @@ class UserService {
     //  check if email already exist in another account
     if (updateData.email) {
       const emailExist = await this.userRepository.findOne({ filter: { email: updateData.email }, projection: { email: 1 } });
-
       if (emailExist && emailExist.id !== _id.toString()) {
         throw new ConflictException("email is already exist");
       }
@@ -41,53 +42,49 @@ class UserService {
 
     //  check if phone is sent as required for update?? so apply encryption
     if (updateData.phone) {
-        
       updateData.phone = this.dataSecurityService.encrypt(updateData.phone);
     }
 
     //  save all updates and get updated profile data
-    const updatedProfile = await this.userRepository.findByIdAndUpdate({ id: _id, update: { ...updateData } });
+    const updatedProfile = await this.userRepository.findByIdAndUpdate({ id: userProfile.id, update: { ...updateData } });
 
     //  decrypt phone number for representation of the profile
-    if (updatedProfile && updatedProfile.phone) {        
+    if (updatedProfile && updatedProfile.phone) {
       updatedProfile.phone = this.dataSecurityService.decrypt(updatedProfile.phone);
-
     }
-    
 
     return updatedProfile;
   }
 
-  //   // * update Password
-  //   async updatePassword(passwordData, userAccount, issuer) {
-  //     const { oldPassword, newPassword, confirmNewPassword } = passwordData;
-  //     const { password: hashedPassword } = userAccount;
+  // * update Password
+  async updatePassword(passwordData: TUpdatePasswordSchemaDto, userAccount: HydratedDocument<IUser>, issuer: string) {
+    const { oldPassword, newPassword, confirmNewPassword } = passwordData;
+    const { password: hashedPassword } = userAccount;
 
-  //     // check if the old password entered is matching the user password
-  //     const isPasswordMatched = await compareHash(oldPassword, hashedPassword);
-  //     if (!isPasswordMatched) {
-  //       throw new UnauthorizedException("Incorrect Current Password");
-  //     }
+    // check if the old password entered is matching the user password
+    const isPasswordMatched = await this.dataSecurityService.compareHash(oldPassword, hashedPassword);
+    if (!isPasswordMatched) {
+      throw new UnauthorizedException("Incorrect Current Password");
+    }
 
-  //     for (const hash of userAccount.oldPasswords) {
-  //       if (await compareHash(newPassword, hash)) {
-  //         throw new ConflictException("this password is already used before");
-  //       }
-  //     }
+    for (const hash of userAccount.oldPasswords as string[]) {
+      if (await this.dataSecurityService.compareHash(newPassword, hash)) {
+        throw new ConflictException("this password is already used before");
+      }
+    }
 
-  //     // update Password and logeout from all devices
-  //     userAccount.password = await generateHash(newPassword);
-  //     userAccount.oldPasswords.push(userAccount.password);
-  //     userAccount.confirmedPassword = await generateHash(confirmNewPassword);
-  //     userAccount.logoutCredentialTime = Date.now();
-  //     await userAccount.save();
+    // update Password and logeout from all devices
+    userAccount.password = newPassword;
+    userAccount.confirmedPassword = confirmNewPassword;
+    userAccount.logoutCredentialTime = new Date();
+    await userAccount.save();
 
-  //     // delete the saved RevokedKeys keys
-  //     const existsRevokedKeys = await keys(`${baseRT_key(userAccount._id)}*`);
-  //     del([...existsRevokedKeys]);
+    // delete the saved RevokedKeys keys
+    const existsRevokedKeys = await this.redisService.keys(`${RevokedTokenService.RevokenKeyFormat({ id: userAccount.id })}*`);
+    if (existsRevokedKeys.length) this.redisService.del(existsRevokedKeys);
 
-  //     return buildTokens(userAccount, issuer);
-  //   }
+    return authService.buildTokens(userAccount, issuer);
+  }
 
   //   // * update Profile Pic
   //   async uploadProfilePic(userProfile, fileData) {
