@@ -69,6 +69,13 @@ class AuthService {
       userExist.save();
       return userExist;
     }
+
+    // create and Send Verification OTP mail
+    await this.createAndSendOtp({
+      email: { to: userInputs.email, cc: "michael_civilengineer@yahoo.com" },
+      otp: { otpContext: OtpConextEnum.email, OtpExpInMin: 1, OtpState: OtpStateEnum.new },
+    });
+
     //  create user
     const user = await this.userRepository.create({ data: userInputs });
     return user;

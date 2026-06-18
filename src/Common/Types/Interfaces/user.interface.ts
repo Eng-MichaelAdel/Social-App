@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { GenderEnum, ProviderEnum, RoleEnum, StatusEnum } from "../Enums";
 
 export interface IUser {
-  _id:mongoose.Schema.Types.ObjectId,
+  _id: mongoose.Schema.Types.ObjectId;
   id?: string;
   firstName: string;
   lastName: string;
