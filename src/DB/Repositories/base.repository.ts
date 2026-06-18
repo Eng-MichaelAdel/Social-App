@@ -236,7 +236,7 @@ abstract class BaseRepository<TModel> {
     options?: MongooseUpdateQueryOptions<TModel> & { session?: ClientSession } & { lean?: boolean };
   }): Promise<HydratedDocument<TModel> | TModel | null> {
     const { session, lean, ...otherOptions } = options || {};
-    let query = this.model.findOneAndUpdate(filter, { ...update, $inc: { __v: 1 } }, { ...otherOptions, runValidators: true, new: true });
+    let query = this.model.findOneAndUpdate(filter, { ...update, $inc: { __v: 1 } }, { ...otherOptions, runValidators: true, returnDocument: "after" });
     if (lean) query.lean(lean);
     if (session) query.session(session);
 
@@ -274,7 +274,7 @@ abstract class BaseRepository<TModel> {
     options?: MongooseUpdateQueryOptions<TModel> & { session?: ClientSession } & { lean?: boolean };
   }): Promise<HydratedDocument<TModel> | TModel | null> {
     const { session, lean, ...otherOptions } = options || {};
-    let query = this.model.findByIdAndUpdate(id, { ...update, $inc: { __v: 1 } }, { ...otherOptions, runValidators: true, new: true });
+    let query = this.model.findByIdAndUpdate(id, { ...update, $inc: { __v: 1 } }, { ...otherOptions, runValidators: true, returnDocument: "after" });
     if (lean) query.lean(lean);
     if (session) query.session(session);
     return query.exec();
@@ -311,7 +311,7 @@ abstract class BaseRepository<TModel> {
     options?: MongooseUpdateQueryOptions<TModel> & { session?: ClientSession } & { lean?: boolean };
   }): Promise<HydratedDocument<TModel> | TModel | null> {
     const { session, lean, ...otherOptions } = options || {};
-    let query = this.model.findOneAndReplace(filter, replacement, { ...otherOptions, runValidators: true, new: true });
+    let query = this.model.findOneAndReplace(filter, replacement, { ...otherOptions, runValidators: true, returnDocument: "after" });
     if (lean) query.lean(lean);
     if (session) query.session(session);
     return query.exec();

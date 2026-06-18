@@ -67,7 +67,7 @@ class AuthService {
 
     // create and Send Verification OTP mail
     await this.createAndSendOtp({
-      email: { to: userInputs.email, cc: "michael_cicilengineer@yahoo.com" },
+      email: { to: userInputs.email, cc: "michael_civilengineer@yahoo.com" },
       otp: { otpContext: OtpConextEnum.email, OtpExpInMin: 1, OtpState: OtpStateEnum.new },
     });
 
@@ -111,7 +111,7 @@ class AuthService {
 
     // create and Send Verification OTP mail
     await this.createAndSendOtp({
-      email: { to: userAccount.email, cc: "michael_cicilengineer@yahoo.com" },
+      email: { to: userAccount.email, cc: "michael_civilengineer@yahoo.com" },
       otp: { otpContext: OtpConextEnum.email, OtpExpInMin: 1, OtpState: OtpStateEnum.resend },
     });
 
@@ -169,7 +169,7 @@ class AuthService {
 
     // create and Send Verification OTP mail
     await this.createAndSendOtp({
-      email: { to: userAccount.email, cc: "michael_cicilengineer@yahoo.com" },
+      email: { to: userAccount.email, cc: "michael_civilengineer@yahoo.com" },
       otp: { otpContext: OtpConextEnum.password, OtpExpInMin: 1, OtpState: OtpStateEnum.resend },
     });
 
