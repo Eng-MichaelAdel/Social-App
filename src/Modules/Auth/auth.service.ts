@@ -9,6 +9,7 @@ import {
   OtpSubjectEnum,
   ProviderEnum,
   UnauthorizedException,
+  verifyGcpIdToken,
 } from "../../Common";
 import { GenerateOtpKeyService, RedisService, RevokedTokenKeyService, TokenService } from "../../Common/Services";
 import { emailEvent, otpTemplate } from "../../Common/Utils/Email";
@@ -18,6 +19,8 @@ import { TConfirmEmailDto, TLoginSchemaDto, TLogoutServiceDto, TResendConfirmEma
 import { OtpMsgtitleEnum } from "../../Common/Utils/Email/email.types";
 import { randomUUID } from "node:crypto";
 import { JwtPayload } from "jsonwebtoken";
+import { TokenPayload } from "google-auth-library";
+import { HydratedDocument } from "mongoose";
 
 interface ICreateAndSendOtp {
   email: {
@@ -46,31 +49,26 @@ class AuthService {
   //* signup
   async signup(userInputs: TsighnUpDto): Promise<IUser> {
     //  check email exist
-    const emailExist = await this.userRepository.findOne({
+    const userExist = await this.userRepository.findOne({
       filter: { email: userInputs.email },
-      projection: { email: 1, _id: 0 },
-      options: { lean: true },
     });
 
-    if (emailExist) {
-      throw new ConflictException("email is already exist");
+    if (userExist && userExist.provider.includes(ProviderEnum.System)) {
+      throw new ConflictException("email is already registered");
     }
 
-    //  hash password and confirmed password
-    userInputs.password = await this.dataSecurityService.generateHash(userInputs.password);
-    userInputs.confirmedPassword = await this.dataSecurityService.generateHash(userInputs.confirmedPassword);
-
-    //  encrypt phone
-    if (userInputs.phone) {
-      userInputs.phone = this.dataSecurityService.encrypt(userInputs.phone);
+    // so ther is an account already created by providers like google , facebookr ..etc
+    // so just update the account
+    if (userExist && userExist.provider.length !== 0) {
+      userExist.password = userInputs.password;
+      userExist.confirmedPassword = userInputs.confirmedPassword;
+      userExist.phone = userInputs.phone;
+      userExist.gender = userInputs.gender;
+      userExist.DOB = userInputs.DOB;
+      userExist.provider.push(ProviderEnum.System);
+      userExist.save();
+      return userExist;
     }
-
-    // create and Send Verification OTP mail
-    await this.createAndSendOtp({
-      email: { to: userInputs.email, cc: "michael_cicilengineer@yahoo.com" },
-      otp: { otpContext: OtpConextEnum.email, OtpExpInMin: 1, OtpState: OtpStateEnum.new },
-    });
-
     //  create user
     const user = await this.userRepository.create({ data: userInputs });
     return user;
@@ -111,7 +109,7 @@ class AuthService {
 
     // create and Send Verification OTP mail
     await this.createAndSendOtp({
-      email: { to: userAccount.email, cc: "michael_cicilengineer@yahoo.com" },
+      email: { to: userAccount.email, cc: "michael_civilengineer@yahoo.com" },
       otp: { otpContext: OtpConextEnum.email, OtpExpInMin: 1, OtpState: OtpStateEnum.resend },
     });
 
@@ -141,7 +139,7 @@ class AuthService {
       throw new UnauthorizedException("invalid token type ,expected refresh token");
     }
 
-    //  stop generatingnew access token until the used one is expired
+    //  stop generating new access token until the created one is expired
     const expOfAccessToken = JwtSecrets[decodedData.role].accessExp;
     if (((decodedData.iat as number) + expOfAccessToken) * 1000 > Date.now()) {
       throw new ConflictException("current acces token is still valid");
@@ -169,7 +167,7 @@ class AuthService {
 
     // create and Send Verification OTP mail
     await this.createAndSendOtp({
-      email: { to: userAccount.email, cc: "michael_cicilengineer@yahoo.com" },
+      email: { to: userAccount.email, cc: "michael_civilengineer@yahoo.com" },
       otp: { otpContext: OtpConextEnum.password, OtpExpInMin: 1, OtpState: OtpStateEnum.resend },
     });
 
@@ -240,6 +238,48 @@ class AuthService {
         return "logout is done successfully from your device";
     }
   }
+
+  // * Gmail Registertion
+  async gmailRegisterService(idToken: string, issuer: string) {
+    // verify gcp idToken
+    const payload = await verifyGcpIdToken(idToken);
+
+    //  find if the accunt is exist
+    const user = await this.userRepository.findOne({
+      filter: {
+        $or: [{ googleSub: payload.sub }, { email: payload.email as string }],
+      },
+    });
+
+    //  update the user account if exist else create a new one
+    const userData = await this.handleUpdateOrCreateGoogleAccount(user, payload);
+
+    //  generate access and refresh token
+    const { accessToken, refreshToken } = this.buildTokens(userData as IUser, issuer);
+
+    return { accessToken, refreshToken };
+  }
+
+  // * Gmail Login
+  async gmailLogInService(idToken: string, issuer: string) {
+    // verify gcp idToken
+    const payload = await verifyGcpIdToken(idToken);
+
+    //  find if the accunt is exist
+    const user = await this.userRepository.findOne({
+      filter: { $or: [{ googleSub: payload.sub }, { email: payload.email as string }] },
+    });
+
+    if (!user) {
+      throw new NotFoundException("user not registered");
+    }
+
+    //  generate access and refresh token
+    const { accessToken, refreshToken } = this.buildTokens(user, issuer);
+
+    return { accessToken, refreshToken };
+  }
+
   // ^--------------------------------------------------------------------------------------------------------------------------------------------^ //
 
   private buildTokens(userData: IUser | IPayloadData, issuer: string) {
@@ -253,7 +293,7 @@ class AuthService {
     return Credentials;
   }
 
-  private createAndSendOtp = async ({ email: { to, cc, subject, otpMsgTitle }, otp: { otpContext, OtpState, OtpExpInMin } }: ICreateAndSendOtp) => {
+  createAndSendOtp = async ({ email: { to, cc, subject, otpMsgTitle }, otp: { otpContext, OtpState, OtpExpInMin } }: ICreateAndSendOtp) => {
     // if resending new Otp .. check blocking or max trials first
     await GenerateOtpKeyService.CheckValidationOfAllOtp({ otpUserData: to, otpContext, OtpState });
 
@@ -269,6 +309,36 @@ class AuthService {
     // save the otp Keys to database
     GenerateOtpKeyService.setAllOtpKeysToDatabase({ otpValue: otp, otpUserData: to, otpContext, OtpState, OtpExpInMin });
     return;
+  };
+
+  private handleUpdateOrCreateGoogleAccount = async (user: HydratedDocument<IUser> | null, payload: TokenPayload) => {
+    const { given_name, family_name, email, picture, sub } = payload;
+    if (user) {
+      user.firstName = given_name as string;
+      user.lastName = family_name as string;
+      user.email = email as string;
+      user.profielPictuer = picture as string;
+      if (!user.provider.includes(ProviderEnum.Google)) {
+        user.provider.push(ProviderEnum.Google);
+        user.googleSub = sub as string;
+      }
+
+      await user.save();
+      return user;
+    } else {
+      return await this.userRepository.create({
+        data: {
+          googleSub: sub as string,
+          firstName: given_name as string,
+          lastName: family_name as string,
+          email: email as string,
+          profielPictuer: picture as string,
+          // password: hashedPassword,
+          // confirmedPassword: hashedPassword,
+          provider: [ProviderEnum.Google],
+        },
+      });
+    }
   };
 }
 export default new AuthService();

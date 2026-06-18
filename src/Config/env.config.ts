@@ -35,7 +35,7 @@ const envConfig = {
 
   EMAIL: {
     user: process.env.EMAIL_USER ?? "michael.civil13@gmail.com",
-    password: process.env.EMAIL_PASS ?? "rodvdofxbwzpywmo",
+    password: process.env.EMAIL_PASS ?? "qyqptqcqqnoomavl",
     service: process.env.EMAIL_SERVICE ?? "Gmail",
   },
 
@@ -43,6 +43,14 @@ const envConfig = {
     URL:
       process.env.REDIS_URL ??
       "rediss://default:gQAAAAAAAY_zAAIocDIxZjM5NjY2NDRlZDk0MmM5OWYwYmE2M2UzMmJiNzVmM3AyMTAyMzg3@new-lamprey-102387.upstash.io:6379",
+  },
+
+  CORS: {
+    cors_whitelist_origin: process.env.CORS_WHITELIST_ORIGIN?.split(",") ?? ["http://localhost:4200"],
+  },
+
+  GCP: {
+    Gcp_client_id: process.env.GCP_CLIENT_ID ?? "16643267836-4ogqldipg16o0p3aspr1b80rt623s9em.apps.googleusercontent.com",
   },
 };
 

@@ -249,7 +249,7 @@ abstract class BaseRepository<TModel> {
     update,
     options,
   }: {
-    id: string | ObjectId;
+    id: string ;
     update: UpdateQuery<TModel>;
     options?: MongooseUpdateQueryOptions<TModel> & { session?: ClientSession } & { lean?: true };
   }): Promise<TModel | null>;
@@ -259,7 +259,7 @@ abstract class BaseRepository<TModel> {
     update,
     options,
   }: {
-    id: string | ObjectId;
+    id: string ;
     update: UpdateQuery<TModel>;
     options?: MongooseUpdateQueryOptions<TModel> & { session?: ClientSession };
   }): Promise<HydratedDocument<TModel> | null>;
@@ -269,7 +269,7 @@ abstract class BaseRepository<TModel> {
     update,
     options,
   }: {
-    id: string | ObjectId;
+    id: string ;
     update: UpdateQuery<TModel>;
     options?: MongooseUpdateQueryOptions<TModel> & { session?: ClientSession } & { lean?: boolean };
   }): Promise<HydratedDocument<TModel> | TModel | null> {
@@ -383,7 +383,7 @@ abstract class BaseRepository<TModel> {
     id,
     options,
   }: {
-    id: string | ObjectId;
+    id: string ;
     options?: QueryOptions<TModel> & { session?: ClientSession } & { lean?: true };
   }): Promise<TModel | null>;
 
@@ -391,7 +391,7 @@ abstract class BaseRepository<TModel> {
     id,
     options,
   }: {
-    id: string | ObjectId;
+    id: string ;
     options?: QueryOptions<TModel> & { session?: ClientSession };
   }): Promise<HydratedDocument<TModel> | null>;
 
@@ -399,7 +399,7 @@ abstract class BaseRepository<TModel> {
     id,
     options,
   }: {
-    id: string | ObjectId;
+    id: string ;
     options?: QueryOptions<TModel> & { session?: ClientSession } & { lean?: boolean };
   }): Promise<HydratedDocument<TModel> | TModel | null> {
     const { session, lean, ...otherOptions } = options || {};

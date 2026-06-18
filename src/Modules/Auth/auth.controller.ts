@@ -62,9 +62,25 @@ router.post("/logout", Authentication, async (req, res, next) => {
   const message = await authService.logoutService({
     userAccount: req.user,
     accessDecodedData: req.decode,
-    refreshToken: req.headers.refreshtoken ,
+    refreshToken: req.headers.refreshtoken,
     logoutFromAll: req.body.logoutFromAll,
   });
   successResponse({ res, message });
+});
+
+// * Gmail Registertion
+router.post("/gmail/register", async (req, res, next) => {
+  const issuer = `${req.protocol}://${req.host}`;
+  const data = await authService.gmailRegisterService(req.body.idToken, issuer);
+
+  successResponse({ res, message: "User reqgistered successfully", data: { credentials: data } });
+});
+
+// * Gmail Login
+router.post("/gmail/login", async (req, res, next) => {
+  const issuer = `${req.protocol}://${req.host}`;
+  const data = await authService.gmailLogInService(req.body.idToken, issuer);
+
+  successResponse({ res, message: "User Loggen in successfully", data: { credentials: data } });
 });
 export default router;
