@@ -29,8 +29,6 @@ export const sendEmail = async ({ to, cc, subject, attachments = [], html }: Mai
 };
 
 export const emailEvent = new EventEmitter();
-emailEvent.on("sendEmail", ({ to, cc, subject, attachments = [], html }: Mail.Options) => {
-  console.log({ to, cc, subject });
-  
+emailEvent.on("sendEmail", ({ to, cc, subject, attachments = [], html }: Mail.Options) => {  
   sendEmail({ to, cc, subject, html });
 });

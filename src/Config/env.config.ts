@@ -35,7 +35,7 @@ const envConfig = {
 
   EMAIL: {
     user: process.env.EMAIL_USER ?? "michael.civil13@gmail.com",
-    password: process.env.EMAIL_PASS ?? "rodvdofxbwzpywmo",
+    password: process.env.EMAIL_PASS ?? "qyqptqcqqnoomavl",
     service: process.env.EMAIL_SERVICE ?? "Gmail",
   },
 

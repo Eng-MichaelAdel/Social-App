@@ -57,26 +57,12 @@ class AuthService {
       throw new ConflictException("email is already registered");
     }
 
-    //  hash password and confirmed password
-    userInputs.password = await this.dataSecurityService.generateHash(userInputs.password);
-    userInputs.confirmedPassword = await this.dataSecurityService.generateHash(userInputs.confirmedPassword);
-
-    //  encrypt phone
-    if (userInputs.phone) {
-      userInputs.phone = this.dataSecurityService.encrypt(userInputs.phone);
-    }
-
-    // create and Send Verification OTP mail
-    await this.createAndSendOtp({
-      email: { to: userInputs.email, cc: "michael_civilengineer@yahoo.com" },
-      otp: { otpContext: OtpConextEnum.email, OtpExpInMin: 1, OtpState: OtpStateEnum.new },
-    });
-
     // so ther is an account already created by providers like google , facebookr ..etc
     // so just update the account
-    if(userExist && userExist.provider.length !== 0){
+    if (userExist && userExist.provider.length !== 0) {
       userExist.password = userInputs.password;
       userExist.confirmedPassword = userInputs.confirmedPassword;
+      userExist.phone = userInputs.phone;
       userExist.gender = userInputs.gender;
       userExist.DOB = userInputs.DOB;
       userExist.provider.push(ProviderEnum.System);
@@ -121,8 +107,6 @@ class AuthService {
       throw new NotFoundException("Fail to find matching account");
     }
 
-    console.log(userAccount);
-    
     // create and Send Verification OTP mail
     await this.createAndSendOtp({
       email: { to: userAccount.email, cc: "michael_civilengineer@yahoo.com" },
@@ -155,7 +139,7 @@ class AuthService {
       throw new UnauthorizedException("invalid token type ,expected refresh token");
     }
 
-    //  stop generatingnew access token until the used one is expired
+    //  stop generating new access token until the created one is expired
     const expOfAccessToken = JwtSecrets[decodedData.role].accessExp;
     if (((decodedData.iat as number) + expOfAccessToken) * 1000 > Date.now()) {
       throw new ConflictException("current acces token is still valid");
@@ -286,8 +270,6 @@ class AuthService {
       filter: { $or: [{ googleSub: payload.sub }, { email: payload.email as string }] },
     });
 
-    console.log(user);
-
     if (!user) {
       throw new NotFoundException("user not registered");
     }
@@ -311,7 +293,7 @@ class AuthService {
     return Credentials;
   }
 
-  private createAndSendOtp = async ({ email: { to, cc, subject, otpMsgTitle }, otp: { otpContext, OtpState, OtpExpInMin } }: ICreateAndSendOtp) => {
+  createAndSendOtp = async ({ email: { to, cc, subject, otpMsgTitle }, otp: { otpContext, OtpState, OtpExpInMin } }: ICreateAndSendOtp) => {
     // if resending new Otp .. check blocking or max trials first
     await GenerateOtpKeyService.CheckValidationOfAllOtp({ otpUserData: to, otpContext, OtpState });
 
@@ -344,7 +326,6 @@ class AuthService {
       await user.save();
       return user;
     } else {
-      // const hashedPassword = await this.dataSecurityService.generateHash(crypto.randomBytes(12).toString("hex"));
       return await this.userRepository.create({
         data: {
           googleSub: sub as string,

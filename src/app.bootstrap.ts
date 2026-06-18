@@ -7,6 +7,7 @@ import dbConnetion from "./DB/db.connection";
 import { RedisService } from "./Common/Services";
 import { corsOptions } from "./Config/cors.config";
 
+
 const bootstrap = async (): Promise<void> => {
   // create app instance from express
   const app: Application = express();
