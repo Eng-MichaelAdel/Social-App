@@ -37,3 +37,9 @@ export const updatePasswordSchema = {
       }
     }),
 };
+
+export const SharedProfileSchema = {
+  params: z.object({
+    userId: generalValidators.user.shape.id,
+  }),
+};

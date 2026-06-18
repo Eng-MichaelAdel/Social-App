@@ -1,9 +1,9 @@
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, ObjectId } from "mongoose";
 import { DataSecurityService, RedisService, TokenService } from "../../Common/Services";
 import { envConfig } from "../../Config";
 import { UserRepository } from "../../DB/Repositories";
-import { ConflictException, IUser, UnauthorizedException } from "../../Common";
-import { TUpdatePasswordSchemaDto, TUpdateProfileShcemaDto } from "./user.Dto";
+import { BadRequestException, ConflictException, IUser, UnauthorizedException } from "../../Common";
+import { TSharedProfileSchemaDto, TUpdatePasswordSchemaDto, TUpdateProfileShcemaDto } from "./user.Dto";
 import RevokedTokenService from "../../Common/Services/RevokedToken.service";
 import authService from "../Auth/auth.service";
 
@@ -118,14 +118,22 @@ class UserService {
   //     return updatedProfile;
   //   }
 
-  //   // * get Shared Profile
-  //   async getSharedProfile(userId) {
-  //     const userProfile = await userRepositories.findById({ id: userId });
-  //     if (!userProfile) {
-  //       throw new BadRequestException("Invalid userId , user is not found");
-  //     }
-  //     return userProfile;
-  //   }
+  // * get Shared Profile
+  async getSharedProfile(params: TSharedProfileSchemaDto) {
+    const { userId } = params;
+    if (!userId) {
+      throw new BadRequestException("Invalid userId ");
+    }
+    const userProfile = await this.userRepository.findById({
+      id: userId,
+      projection: { firstName: 1, lastName: 1, gender: 1, DOB: 1, _id: 0 },
+      options: { lean: true },
+    });
+    if (!userProfile) {
+      throw new BadRequestException("Invalid userId , user is not found");
+    }
+    return userProfile;
+  }
 
   //   // * Delete account
   //   async deleteUserAccount(userProfile) {
