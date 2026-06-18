@@ -2,7 +2,7 @@ import { Router } from "express";
 import { Authentication, validation } from "../../Middlewares";
 import userService from "./user.service";
 import { successResponse } from "../../Common";
-import { updateProfileShcema } from "../../Validators";
+import { updatePasswordSchema, updateProfileShcema } from "../../Validators";
 
 const router = Router();
 
@@ -18,12 +18,12 @@ router.put("/update", Authentication, validation(updateProfileShcema), async (re
   return successResponse({ res, message: "user Profile updated successfully", data: { account: updatedProfile } });
 });
 
-// // * update password
-// router.patch("/update-password", Authentication, validation(updatePasswordSchema), async (req, res, next) => {
-//   const issuer = `${req.protocol}://${req.host}`;
-//   const user = await userService.updatePassword(req.body, req.user, issuer);
-//   return successResponse({ res, message: "your password is updated seccessfully", data: user });
-// });
+// * update password
+router.patch("/update-password", Authentication, validation(updatePasswordSchema), async (req, res, next) => {
+  const issuer = `${req.protocol}://${req.host}`;
+  const user = await userService.updatePassword(req.body, req.user, issuer);
+  return successResponse({ res, message: "your password is updated seccessfully", data: user });
+});
 
 // // * update Profile pic
 // router.patch("/upload/profile-image", Authentication, multerLocal("profile/image").single("profielPictuer"), validation(updateProfileImageShcema), async (req, res, next) => {

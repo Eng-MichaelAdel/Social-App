@@ -12,7 +12,7 @@ export interface IUser {
   confirmedPassword: string;
   phone?: string;
   DOB?: string;
-  oldPasswords?: string[];
+  oldPasswords: string[];
 
   gender: GenderEnum;
   role: RoleEnum;

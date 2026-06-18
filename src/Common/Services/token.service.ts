@@ -66,8 +66,6 @@ class TokenService {
   async decodeToken(token: string): Promise<IDecodeTokenReturn> {
     //  decode token to get role
     const decodedData = jwt.decode(token) as JwtPayload;
-
-    console.log(token);
     
     //  check id and role are sent through payload
     if (!decodedData?.id || !decodedData?.role) {

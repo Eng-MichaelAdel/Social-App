@@ -11,3 +11,29 @@ export const updateProfileShcema = {
     DOB: generalValidators.user.shape.DOB.optional(),
   }),
 };
+
+export const updatePasswordSchema = {
+  body: z
+    .object({
+      oldPassword: generalValidators.user.shape.password,
+      newPassword: generalValidators.user.shape.password,
+      confirmNewPassword: z.string(),
+    })
+    .superRefine((data, ctx) => {
+      if (data.newPassword === data.oldPassword) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["newPassword"],
+          message: "New password must be different from old password",
+        });
+      }
+
+      if (data.confirmNewPassword !== data.newPassword) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["confirmNewPassword"],
+          message: "new Passwords doesn't match",
+        });
+      }
+    }),
+};
